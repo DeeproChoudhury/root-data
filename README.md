@@ -1,4 +1,4 @@
-# A formalisations of root systems in Lean
+# A formalisation of root systems in Lean
 
 This repository is part of Deepro Choudhury's final year project at Imperial College, London.
 
