@@ -376,8 +376,8 @@ begin
     intros α hα,
     intro contra,
     replace contra : (2 : k) • α ∈ Φ, { rwa [nsmul_eq_smul_cast k 2 α, nat.cast_two] at contra, },
-    have h37 := hr α hα (2 : k) contra
-    norm_num at h37, },
+    have h2 := hr α hα (2 : k) contra,
+    norm_num at h2, },
 end
 
 end is_root_system
