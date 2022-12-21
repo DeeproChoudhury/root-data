@@ -233,6 +233,24 @@ end
 --   sorry,
 -- end
 
+lemma deduce_m {m : ℤ} (h : 4 * m = 4) : m = 1 :=
+begin
+  conv_rhs at h { rw ← mul_one (4 : ℤ), },
+  have h_pos : 0 < (4 : ℤ) := by positivity,
+  exact mul_left_cancel₀ h_pos.ne' h,
+end
+
+lemma deduce_m_neg {m : ℤ} (h : (-4) * m = 4) : m = -1 :=
+begin
+  conv_rhs at h { rw ← mul_one (4 : ℤ), },
+  conv_rhs at h {rw ← neg_mul_neg, },
+  -- rw neg_mul_comm at h,
+  have h_pos : (-4 : ℤ) < 0 := by norm_num,
+  -- rw neg_mul_eq_mul_neg at h,
+  -- rw neg_eq_neg_one_mul at h,
+  exact mul_left_cancel₀ h_pos.ne h,
+end
+
 lemma is_reduced_iff (h : is_root_system k Φ) :
   is_reduced_root_system k Φ ↔ ∀ (α ∈ Φ) (t : k), t • α ∈ Φ → t = 1 ∨ t = -1 :=
 begin
@@ -297,9 +315,22 @@ begin
     { cases n.nat_abs_eq with h h,
       { left, rw [h, this, nat.cast_two], },
       { right, rw [h, this, nat.cast_two], }, },
-    have hm4 : n ≠ 4,
+    have hn4 : n ≠ 4,
     {
-      sorry,
+      by_contra,
+      rw h at hmn,
+      replace hmn := deduce_m hmn,
+      -- conv_rhs at hmn { rw ← int.mul_one 4, },
+      -- have h_pos : 0 < (4 : ℤ) := by positivity,
+      -- rw [mul_left_cancel₀ h_pos.ne' hmn],
+      contradiction,
+    },
+    have hnm4 : n ≠ -4,
+    {
+      by_contra,
+      rw h at hmn,
+      replace hmn := deduce_m_neg hmn,
+      contradiction,
     },
     replace hmn := congr_arg int.nat_abs hmn,
     rw [int.nat_abs_mul, (by norm_num : (4 : ℤ).nat_abs = 4)] at hmn,
@@ -333,11 +364,12 @@ begin
       --  rw nat.cast_one at h_1,
       --  rw norm_num.adc_one_one at h_1,
       --  rw int.of_nat_add at h_1, },
-      {rw h at h_1,
-       rw nat.cast_one at h_1,
-       contradiction,},
-      sorry, },
-    sorry, },
+      {
+       exfalso,
+       rw h at h_1,
+       norm_cast at h_1, },
+     },
+      },
   { -- λ hr, ⟨h, λ α hα contra, _⟩
     intro hr,
     refine ⟨h, _⟩,
