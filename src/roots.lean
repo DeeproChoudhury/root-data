@@ -228,11 +228,6 @@ begin
   dec_trivial,
 end
 
--- example : {n : ℤ} (n.nat_abs) ≠ ((n + 1).nat_abs) :=
--- begin
---   sorry,
--- end
-
 lemma deduce_m {m : ℤ} (h : 4 * m = 4) : m = 1 :=
 begin
   conv_rhs at h { rw ← mul_one (4 : ℤ), },
@@ -244,10 +239,7 @@ lemma deduce_m_neg {m : ℤ} (h : (-4) * m = 4) : m = -1 :=
 begin
   conv_rhs at h { rw ← mul_one (4 : ℤ), },
   conv_rhs at h {rw ← neg_mul_neg, },
-  -- rw neg_mul_comm at h,
   have h_pos : (-4 : ℤ) < 0 := by norm_num,
-  -- rw neg_mul_eq_mul_neg at h,
-  -- rw neg_eq_neg_one_mul at h,
   exact mul_left_cancel₀ h_pos.ne h,
 end
 
@@ -320,9 +312,6 @@ begin
       by_contra,
       rw h at hmn,
       replace hmn := deduce_m hmn,
-      -- conv_rhs at hmn { rw ← int.mul_one 4, },
-      -- have h_pos : 0 < (4 : ℤ) := by positivity,
-      -- rw [mul_left_cancel₀ h_pos.ne' hmn],
       contradiction,
     },
     have hnm4 : n ≠ -4,
@@ -337,12 +326,7 @@ begin
     replace hmn : n.nat_abs ∣ 4 := ⟨m.nat_abs, hmn.symm⟩,
     rcases div hmn with h | h | h,
     {
-      -- cases n.nat_abs with h1 h1,
-      -- norm_num,
-      -- nlinarith,
-      -- hint,
       exfalso,
-      -- rw int.nat_abs_eq at h,
       cases int.nat_abs_eq n,
       {rw h at h_1,
        rw nat.cast_one at h_1,
@@ -354,16 +338,11 @@ begin
     {
       assumption, },
     {
-      -- contrapose! hn1,
       cases int.nat_abs_eq n,
       {
        exfalso,
        rw h at h_1,
        norm_cast at h_1, },
-      --  rw [nat.cast_add_one, nat.cast_add_one, nat.cast_add_one] at h_1,
-      --  rw nat.cast_one at h_1,
-      --  rw norm_num.adc_one_one at h_1,
-      --  rw int.of_nat_add at h_1, },
       {
        exfalso,
        rw h at h_1,
