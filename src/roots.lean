@@ -209,13 +209,9 @@ theorem foo {k : Type u_1} {V : Type u_2} (n m : ℤ)
      (h.coroot α) ↑β = ↑m → m ≠ 1 :=
 begin
   intros α β hαβ hn_1 hm,
-  -- cut and paste from here
   have := hr.two_smul_not_mem β β.property,
   contrapose! this,
-  -- rw algebra.id.smul_eq_mul at hαβ,
-  -- rw [hαβ] at htm,
   rw [this, algebra_map.coe_one, mul_one, inv_eq_iff_inv_eq] at htm,
-  -- simp only [nsmul_eq_smul_cast k 2, nat.cast_two, subtype.coe_mk],
   simpa only [nsmul_eq_smul_cast k 2, nat.cast_two, subtype.coe_mk, smul_inv_smul₀, ne.def,
                 bit0_eq_zero, one_ne_zero, not_false_iff, ← htm],
 end
