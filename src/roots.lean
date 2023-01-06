@@ -53,7 +53,7 @@ structure is_root_system (Φ : set V) : Prop :=
 (finite : finite Φ)
 (span_eq_top : submodule.span k Φ = ⊤)
 (exists_dual : ∀ α ∈ Φ, ∃ f : module.dual k V, f α = 2 ∧ module.to_pre_symmetry α f '' Φ ⊆ Φ)
-(subset_zmultiples : ∀ α (f : module.dual k V),
+(subset_zmultiples : ∀ (α ∈ Φ) (f : module.dual k V),
   f α = 2 ∧ module.to_pre_symmetry α f '' Φ ⊆ Φ → f '' Φ ⊆ add_subgroup.zmultiples (1 : k))
 /-image of phi under the map f is a subset copy of the integers that live in k -/
 
@@ -100,7 +100,8 @@ end
 
 @[simp] lemma coroot_image_subset_zmultiples (α : Φ) :
   h.coroot α '' Φ ⊆ add_subgroup.zmultiples (1 : k) :=
-h.subset_zmultiples α (h.coroot α) ⟨h.coroot_apply_self_eq_two α, h.symmetry_of_root_image_subset α⟩
+h.subset_zmultiples α α.property (h.coroot α)
+  ⟨h.coroot_apply_self_eq_two α, h.symmetry_of_root_image_subset α⟩
 
 @[simp] lemma coroot_apply_mem_zmultiples (α β : Φ) :
   h.coroot α β ∈ add_subgroup.zmultiples (1 : k) :=
