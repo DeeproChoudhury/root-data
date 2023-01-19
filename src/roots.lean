@@ -1,13 +1,17 @@
 import linear_algebra.dual
 import linear_algebra.contraction
 import linear_algebra.bilinear_form
+import data.sign
 
 noncomputable theory
 
-open_locale tensor_product big_operators
+open_locale tensor_product big_operators classical
 open set function
 
 variables {k V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
+
+
+-- example: char_zero k := strict_ordered_semiring.to_char_zero
 
 namespace module
 
@@ -65,8 +69,25 @@ variables {k}
 
 namespace is_root_system
 
+/-- Need ordering for base, k and V are locally shadowing here-/
+structure is_base {k V ι : Type*} [linear_ordered_field k] [add_comm_group V] [module k V]
+{Φ : set V} (h : is_root_system k Φ)
+(b : basis ι k V) : Prop :=
+(is_integral: ∀ (α ∈ Φ) i, b.coord i α ∈ add_subgroup.zmultiples (1 : k))
+(same_sign: ∀ (α ∈ Φ), (∀ i, 0 ≤ b.coord i α) ∨ (∀ i, b.coord i α ≤ 0))
+
 variables {Φ : set V} (h : is_root_system k Φ)
 include h
+
+-- #check @basis.mk _ k V _ _ _ _
+-- def has_base (b : set V) : Prop := b ⊆ Φ ∧ linear_independent k (coe : b → V) ∧ submodule.span k b = ⊤
+-- ∧ more conditions
+
+-- def has_base {ι : Type*} (b : basis ι k V) : Prop := ∀ (α ∈ Φ) (i : ι),
+-- b.coord i α ∈ add_subgroup.zmultiples (1 : k)
+-- ∧ ((∀ (i : ι),  ) ∨ (∀ (i : ι), sign_neg))
+
+
 
 /-- The coroot of a root.
 
@@ -87,6 +108,8 @@ module.to_pre_symmetry_apply_self $ h.coroot_apply_self_eq_two α
 
 lemma symmetry_of_root_sq (α : Φ) : (h.symmetry_of_root α)^2 = 1 :=
 sorry
+-- module.to_pre_symmetry_sq $ _--module.to_pre_symmetry_sq $ h.coroot_apply_self_eq_two α
+
 
 @[simp] lemma symmetry_of_root_image_subset (α : Φ) :
   h.symmetry_of_root α '' Φ ⊆ Φ :=
@@ -139,6 +162,10 @@ def weyl_group : subgroup $ units (module.End k V) := subgroup.closure $ range h
 
 -- Estimate high effort.
 lemma finite_weyl_group : finite h.weyl_group := sorry
+
+/- Roots span the space and roots are finite so each root symmetry just permutes the roots. Therefore
+the Wyel group is a subgroup of the symmetry group
+subgroups closure induction-/
 
 /-- The linear map `V → V⋆` induced by a root system. -/
 def to_dual : V →ₗ[k] module.dual k V :=
@@ -217,6 +244,39 @@ begin
                 bit0_eq_zero, one_ne_zero, not_false_iff, ← htm],
 end
 
+theorem m_not_neg_1 {k : Type u_1} {V : Type u_2} (n m : ℤ)
+  [field k]
+  [char_zero k]
+  [add_comm_group V]
+  [module k V]
+  {Φ : set V}
+  (h : is_root_system k Φ)
+  (hr : is_reduced_root_system k Φ)
+  (x : V)
+  (hx : x ∈ Φ)
+  (t : k)
+  (ht : t • x ∈ Φ)
+  (ht₀ : t ≠ 0)
+  (htn : t * ↑n = 2)
+  (htm : t⁻¹ * ↑m = 2)
+  (hmn : n * m = 4)
+  (hn : n ≠ 1)
+  (hn' : n ≠ -1) :
+  let α : ↥Φ := ⟨x, hx⟩,
+      β : ↥Φ := ⟨t • x, ht⟩
+  in t⁻¹ • (β : V) = α →
+     (h.coroot β) ↑α = ↑n →
+     (h.coroot α) ↑β = ↑m → m ≠ -1 :=
+begin
+  intros α β hαβ hn_1 hm,
+  have := hr.two_smul_not_mem (-β) (h.neg_mem β),
+  contrapose! this,
+  simp only [nsmul_eq_smul_cast k 2, nat.cast_two, subtype.coe_mk, smul_neg],
+  rw [this, int.cast_neg, algebra_map.coe_one, mul_neg, mul_one, neg_eq_iff_neg_eq, eq_inv_iff_eq_inv] at htm,
+  rw htm,
+  simpa [← neg_inv],
+end
+
 lemma div {n : ℕ} (h : n ∣ 4) : n = 1 ∨ n = 2 ∨ n = 4 :=
 begin
   have h₁ := nat.le_of_dvd four_pos h,
@@ -234,8 +294,7 @@ end
 
 lemma deduce_m_neg {m : ℤ} (h : (-4) * m = 4) : m = -1 :=
 begin
-  conv_rhs at h { rw ← mul_one (4 : ℤ), },
-  conv_rhs at h {rw ← neg_mul_neg, },
+  conv_rhs at h { rw [ ← mul_one (4 : ℤ), ← neg_mul_neg], },
   have h_pos : (-4 : ℤ) < 0 := by norm_num,
   exact mul_left_cancel₀ h_pos.ne h,
 end
@@ -277,19 +336,18 @@ begin
       rw [this, int.cast_neg, algebra_map.coe_one, mul_neg, mul_one, neg_eq_iff_neg_eq] at htn,
       rwa [← htn, neg_smul] at ht, },
     -- Similarly `m ≠ ± 1`. Using `hmn : n * m = 4` this means `n`, `m` both `± 2`, thus `t = ± 1`.
-    have hm : m ≠ 1,
+    have hm1 : m ≠ 1,
     { exact foo n m h hr x hx t ht ht₀ htn htm hmn hn1 hnm1 hαβ hn hm,
     },
-    have hm' : m ≠ -1,
+    have hmn1 : m ≠ -1,
     {
-      have := hr.two_smul_not_mem (-β) (h.neg_mem β),
-      contrapose! this,
-      simp only [nsmul_eq_smul_cast k 2, nat.cast_two, subtype.coe_mk, smul_neg],
-      rw [this, int.cast_neg, algebra_map.coe_one, mul_neg, mul_one, neg_eq_iff_neg_eq] at htm,
-      rw eq_inv_iff_eq_inv at htm,
-      rw htm,
-      rw ← neg_inv,
-      simpa,
+      exact m_not_neg_1 n m h hr x hx t ht ht₀ htn htm hmn hn1 hnm1 hαβ hn hm,
+      -- have := hr.two_smul_not_mem (-β) (h.neg_mem β),
+      -- contrapose! this,
+      -- simp only [nsmul_eq_smul_cast k 2, nat.cast_two, subtype.coe_mk, smul_neg],
+      -- rw [this, int.cast_neg, algebra_map.coe_one, mul_neg, mul_one, neg_eq_iff_neg_eq, eq_inv_iff_eq_inv] at htm,
+      -- rw htm,
+      -- simpa [← neg_inv],
     },
     suffices : n = 2 ∨ n = -2,
     { rcases this with rfl | rfl,
@@ -325,23 +383,22 @@ begin
     {
       exfalso,
       cases int.nat_abs_eq n,
-      {rw h at h_1,
-       rw nat.cast_one at h_1,
-       finish, },
-      { rw h at h_1,
-        rw nat.cast_one at h_1,
+      {rw [h, nat.cast_one] at h_1,
+      --  rw nat.cast_one at h_1,
+       exact hn1 h_1, },
+      { rw [h, nat.cast_one] at h_1,
+        -- rw nat.cast_one at h_1,
         contradiction, },
     },
     {
       assumption, },
     {
       cases int.nat_abs_eq n,
+      exfalso,
       {
-       exfalso,
        rw h at h_1,
        norm_cast at h_1, },
       {
-       exfalso,
        rw h at h_1,
        norm_cast at h_1, },
      },
@@ -349,8 +406,7 @@ begin
   { -- λ hr, ⟨h, λ α hα contra, _⟩
     intro hr,
     refine ⟨h, _⟩,
-    intros α hα,
-    intro contra,
+    intros α hα contra,
     replace contra : (2 : k) • α ∈ Φ, { rwa [nsmul_eq_smul_cast k 2 α, nat.cast_two] at contra, },
     have h2 := hr α hα (2 : k) contra,
     norm_num at h2, },
