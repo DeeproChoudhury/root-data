@@ -107,7 +107,7 @@ module.to_symmetry $ h.coroot_apply_self_eq_two α
 module.to_pre_symmetry_apply_self $ h.coroot_apply_self_eq_two α
 
 lemma symmetry_of_root_sq (α : Φ) : (h.symmetry_of_root α)^2 = 1 :=
-sorry
+units.ext $ module.to_pre_symmetry_sq $ coroot_apply_self_eq_two h α
 -- module.to_pre_symmetry_sq $ _--module.to_pre_symmetry_sq $ h.coroot_apply_self_eq_two α
 
 
