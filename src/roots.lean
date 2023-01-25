@@ -8,12 +8,13 @@ noncomputable theory
 open_locale tensor_product big_operators classical
 open set function
 
-variables {k V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
 
 
 -- example: char_zero k := strict_ordered_semiring.to_char_zero
 
 namespace module
+
+variables {k V : Type*} [comm_ring k] [add_comm_group V] [module k V]
 
 /-- Given a vector `x` and a linear form `f`, this is the map `y ↦ y - (f y) • x`, bundled as a
 linear endomorphism.
@@ -49,11 +50,10 @@ end module
 
 section root_systems
 
-variables (k)
-
 /-- A crystallographic root system (possibly non-reduced). -/
 @[protect_proj]
-structure is_root_system (Φ : set V) : Prop :=
+structure is_root_system (k : Type*) {V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
+(Φ : set V) : Prop :=
 (finite : finite Φ)
 (span_eq_top : submodule.span k Φ = ⊤)
 (exists_dual : ∀ α ∈ Φ, ∃ f : module.dual k V, f α = 2 ∧ module.to_pre_symmetry α f '' Φ ⊆ Φ)
@@ -62,10 +62,9 @@ structure is_root_system (Φ : set V) : Prop :=
 /-image of phi under the map f is a subset copy of the integers that live in k -/
 
 /-- A reduced, crystallographic root system. -/
-structure is_reduced_root_system (Φ : set V) extends is_root_system k Φ : Prop :=
+structure is_reduced_root_system (k : Type*) {V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
+(Φ : set V) extends is_root_system k Φ : Prop :=
 (two_smul_not_mem : ∀ α ∈ Φ, 2 • α ∉ Φ)
-
-variables {k}
 
 namespace is_root_system
 
@@ -75,6 +74,10 @@ structure is_base {k V ι : Type*} [linear_ordered_field k] [add_comm_group V] [
 (b : basis ι k V) : Prop :=
 (is_integral: ∀ (α ∈ Φ) i, b.coord i α ∈ add_subgroup.zmultiples (1 : k))
 (same_sign: ∀ (α ∈ Φ), (∀ i, 0 ≤ b.coord i α) ∨ (∀ i, b.coord i α ≤ 0))
+
+section field
+
+variables {k V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
 
 variables {Φ : set V} (h : is_root_system k Φ)
 include h
@@ -109,7 +112,10 @@ module.to_pre_symmetry_apply_self $ h.coroot_apply_self_eq_two α
 lemma symmetry_of_root_sq (α : Φ) : (h.symmetry_of_root α)^2 = 1 :=
 units.ext $ module.to_pre_symmetry_sq $ coroot_apply_self_eq_two h α
 -- module.to_pre_symmetry_sq $ _--module.to_pre_symmetry_sq $ h.coroot_apply_self_eq_two α
-
+#print axioms symmetry_of_root_sq
+#check @funext
+#print axioms funext
+#print axioms classical.choice
 
 @[simp] lemma symmetry_of_root_image_subset (α : Φ) :
   h.symmetry_of_root α '' Φ ⊆ Φ :=
@@ -173,6 +179,15 @@ def to_dual : V →ₗ[k] module.dual k V :=
   map_add' := sorry,
   map_smul' := sorry, }
 
+/-- to_dual is really a bilinear form which gives you a number. This is the Euclidean form-/
+lemma to_dual_apply_apply (x y : V) :
+h.to_dual x y = ∑ᶠ α, (h.coroot α x) • h.coroot α y :=
+begin
+ have := h.to_dual.map_add x y,
+ specialize this,
+ sorry,
+end
+
 /-- The bilinear map on `V` induced by a root system. -/
 def to_bilinear_map : V →ₗ[k] V →ₗ[k] k :=
 { to_fun := λ x, h.to_dual x,
@@ -193,7 +208,25 @@ end
 lemma to_bilin_form_orthogonal_eq_ker (α : Φ) :
   h.to_bilin_form.orthogonal (k ∙ (α : V)) = (h.coroot α).ker :=
 begin
-  sorry,
+  apply le_antisymm,
+  { intros x hx,
+    simp only [linear_map.mem_ker],
+    cases h.exists_int_coroot_apply_eq α _ with n hn,
+    sorry,
+    assumption, },
+  { intros x hx,
+    simp only [linear_map.mem_ker] at hx,
+    sorry, }
+    -- have h1 := h.to_bilin_form_apply_apply α _ _,
+
+    -- simp only [smul_eq_mul, mul_sum, sum_smul],
+    -- refine sum_mem _ (λ β hb, _),
+    -- rw [← mul_smul, ← mul_smul, ← mul_smul, ← mul_smul],
+    -- refine mul_mem _ _ _ _,
+    -- { exact h.coroot_apply_mem_zmultiples_2 α β },
+    -- { exact h.coroot_apply_mem_zmultiples_2 α x },
+    -- { exact h.coroot_apply_mem_zmultiples_2 β x },
+    -- { exact h.coroot_apply_mem_zmultiples_2 β α }, },
 end
 
 
@@ -206,19 +239,27 @@ example (P Q : Prop) (hP : P) (hQ : Q) : P ∧ Q :=
 example : set ℕ := {x : ℕ | x ^ 2 = 4 }
 example : Type := {x : ℕ // x ^ 2 = 4}
 
-example : (0 : k) ≠ (1 : k) := by norm_num
-example (x : k) : x ≠ x + 1 := begin
-  hint,
-  sorry
-end
+-- example : (0 : k) ≠ (1 : k) := by norm_num
+-- example (x : k) : x ≠ x + 1 := begin
+--   hint,
+--   sorry
+-- end
 
+-- --Statement, allowed
+-- def nottrueatall : Prop := 2 + 2 = 5
+-- -- Proof that 2 + 2 = 5, not allowed
+-- def foo  :nottrueatall :=
+-- begin
+--   unfold nottrueatall,
+-- end
+
+omit h
 theorem foo {k : Type u_1} {V : Type u_2} (n m : ℤ)
   [field k]
   [char_zero k]
   [add_comm_group V]
   [module k V]
   {Φ : set V}
-  (h : is_root_system k Φ)
   (hr : is_reduced_root_system k Φ)
   (x : V)
   (hx : x ∈ Φ)
@@ -233,8 +274,8 @@ theorem foo {k : Type u_1} {V : Type u_2} (n m : ℤ)
   let α : ↥Φ := ⟨x, hx⟩,
       β : ↥Φ := ⟨t • x, ht⟩
   in t⁻¹ • (β : V) = α →
-     (h.coroot β) ↑α = ↑n →
-     (h.coroot α) ↑β = ↑m → m ≠ 1 :=
+     (hr.coroot β) ↑α = ↑n →
+     (hr.coroot α) ↑β = ↑m → m ≠ 1 :=
 begin
   intros α β hαβ hn_1 hm,
   have := hr.two_smul_not_mem β β.property,
@@ -244,6 +285,7 @@ begin
                 bit0_eq_zero, one_ne_zero, not_false_iff, ← htm],
 end
 
+include h
 theorem m_not_neg_1 {k : Type u_1} {V : Type u_2} (n m : ℤ)
   [field k]
   [char_zero k]
@@ -337,7 +379,7 @@ begin
       rwa [← htn, neg_smul] at ht, },
     -- Similarly `m ≠ ± 1`. Using `hmn : n * m = 4` this means `n`, `m` both `± 2`, thus `t = ± 1`.
     have hm1 : m ≠ 1,
-    { exact foo n m h hr x hx t ht ht₀ htn htm hmn hn1 hnm1 hαβ hn hm,
+    { exact foo n m hr x hx t ht ht₀ htn htm hmn hn1 hnm1 hαβ hn hm,
     },
     have hmn1 : m ≠ -1,
     {
@@ -411,6 +453,14 @@ begin
     have h2 := hr α hα (2 : k) contra,
     norm_num at h2, },
 end
+
+end field
+
+section linear_ordered_field
+variables {k V : Type*} [linear_ordered_field k] [add_comm_group V] [module k V]
+-- This is where theorems about bases go-
+end linear_ordered_field
+
 
 end is_root_system
 

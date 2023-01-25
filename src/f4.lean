@@ -25,7 +25,19 @@ def f4_lattice : add_subgroup ℍ[ℝ] := add_subgroup.closure {s, e₂, e₃, e
 lemma mem_f4_lattice_iff (q : ℍ[ℝ]) :
   q ∈ f4_lattice ↔ q ∈ quat_int ∨ q + s ∈ quat_int :=
 begin
-  sorry,
+  split,
+  intro h,
+  left,
+  assume q hq,
+  -- { intro h,
+  --   have : q ∈ add_subgroup.closure {s, e₂, e₃, e₄} := h,
+  --   rw add_subgroup.mem_closure_iff at this,
+  --   rcases this with ⟨a, b, c, d, ha, hb, hc, hd, rfl⟩,
+  --   suffices : a • s + b • e₂ + c • e₃ + d • e₄ ∈ quat_int,
+  --   { simpa, },
+  --   rw add_subgroup.mem_closure_iff,
+  --   refine ⟨a, b, c, d, ha, hb, hc, hd, _⟩,
+  -- }
 end
 
 /- Remarkable fact: this lattice is actually a subring. May or may not be useful.
