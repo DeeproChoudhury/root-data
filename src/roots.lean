@@ -52,7 +52,7 @@ section root_systems
 
 /-- A crystallographic root system (possibly non-reduced). -/
 @[protect_proj]
-structure is_root_system (k : Type*) {V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
+structure is_root_system (k : Type*) {V : Type*} [comm_ring k] [char_zero k] [add_comm_group V] [module k V]
 (Φ : set V) : Prop :=
 (finite : finite Φ)
 (span_eq_top : submodule.span k Φ = ⊤)
@@ -62,7 +62,7 @@ structure is_root_system (k : Type*) {V : Type*} [field k] [char_zero k] [add_co
 /-image of phi under the map f is a subset copy of the integers that live in k -/
 
 /-- A reduced, crystallographic root system. -/
-structure is_reduced_root_system (k : Type*) {V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
+structure is_reduced_root_system (k : Type*) {V : Type*} [comm_ring k] [char_zero k] [add_comm_group V] [module k V]
 (Φ : set V) extends is_root_system k Φ : Prop :=
 (two_smul_not_mem : ∀ α ∈ Φ, 2 • α ∉ Φ)
 
@@ -191,8 +191,9 @@ end
 /-- The bilinear map on `V` induced by a root system. -/
 def to_bilinear_map : V →ₗ[k] V →ₗ[k] k :=
 { to_fun := λ x, h.to_dual x,
-  map_add' := sorry,
-  map_smul' := sorry, }
+  map_add' := λ x y, by { ext, simp only [map_add], },
+  map_smul' := λ c x, by { ext, simp only [linear_map.map_smulₛₗ], }
+}
 
 /-- The bilinear form on `V` induced by a root system. -/
 def to_bilin_form : bilin_form k V := h.to_bilinear_map.to_bilin
