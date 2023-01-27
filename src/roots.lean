@@ -52,14 +52,25 @@ section root_systems
 
 /-- A crystallographic root system (possibly non-reduced). -/
 @[protect_proj]
-structure is_root_system (k : Type*) {V : Type*} [comm_ring k] [char_zero k] [add_comm_group V] [module k V]
+class is_root_system (k : Type*) {V : Type*} [comm_ring k] [char_zero k] [add_comm_group V] [module k V]
 (Φ : set V) : Prop :=
-(finite : finite Φ)
+(finite : set.finite Φ)
 (span_eq_top : submodule.span k Φ = ⊤)
 (exists_dual : ∀ α ∈ Φ, ∃ f : module.dual k V, f α = 2 ∧ module.to_pre_symmetry α f '' Φ ⊆ Φ)
 (subset_zmultiples : ∀ (α ∈ Φ) (f : module.dual k V),
   f α = 2 ∧ module.to_pre_symmetry α f '' Φ ⊆ Φ → f '' Φ ⊆ add_subgroup.zmultiples (1 : k))
 /-image of phi under the map f is a subset copy of the integers that live in k -/
+
+
+instance is_root_system_set_finite (k : Type*) (V : Type*) {Φ : set V}
+[comm_ring k] [char_zero k] [add_comm_group V] [module k V] [is_root_system k Φ] : fintype Φ
+:=
+-- by infer_instance
+begin
+  refine finite.fintype _,
+  exact is_root_system.finite k,
+  -- letI := classical.dec_eq V,
+end
 
 /-- A reduced, crystallographic root system. -/
 structure is_reduced_root_system (k : Type*) {V : Type*} [comm_ring k] [char_zero k] [add_comm_group V] [module k V]
@@ -176,15 +187,71 @@ subgroups closure induction-/
 /-- The linear map `V → V⋆` induced by a root system. -/
 def to_dual : V →ₗ[k] module.dual k V :=
 { to_fun := λ x, ∑ᶠ α, (h.coroot α x) • h.coroot α,
-  map_add' := sorry,
-  map_smul' := sorry, }
+  map_add' :=
+  begin
+    intros x y,
+    ext,
+    simp only [linear_map.map_add, map_add],
+    simp only [linear_map.add_apply],
+    simp_rw [add_smul],
+    rw finsum_add_distrib,
+    simp only [linear_map.add_apply],
+
+--    push_cast,
+
+    -- change ∑ᶠ α, (h.coroot α x + h.coroot α y) • h.coroot α = ∑ᶠ α, (h.coroot α x) • h.coroot α + ∑ᶠ α, (h.coroot α y) • h.coroot α,
+    sorry,
+    sorry,
+  end,
+  map_smul' := λ c x, by { ext, simp only [linear_map.map_smulₛₗ, ring_hom.id_apply, algebra.id.smul_eq_mul, linear_map.smul_apply],
+   sorry, }, }
+
+example (a b : k) (c : module.dual k V) : (a * b) • c = a • (b • c) := (smul_smul a b c).symm
+
+  /-- The linear map `V → V⋆` induced by a root system. -/
+def to_dual_2 : V →ₗ[k] module.dual k V :=
+{ to_fun := λ x, ∑ (α : Φ), (h.coroot α x) • h.coroot α,
+  map_add' :=
+  begin
+    intros x y,
+    ext,
+    simp only [linear_map.map_add, map_add, linear_map.add_apply],
+    simp_rw [add_smul],
+    rw finset.sum_add_distrib,
+    rw linear_map.add_apply,
+  end,
+  map_smul' :=
+  begin
+    intros c x,
+    ext,
+    simp only [linear_map.map_smulₛₗ, ring_hom.id_apply, algebra.id.smul_eq_mul, linear_map.smul_apply],
+    simp_rw [← smul_smul],
+    rw [← finset.smul_sum],
+    rw linear_map.smul_apply,
+    rw smul_eq_mul,
+
+    -- simp,
+    -- sorry,
+  end
+}
 
 /-- to_dual is really a bilinear form which gives you a number. This is the Euclidean form-/
 lemma to_dual_apply_apply (x y : V) :
+h.to_dual_2 x y = ∑ (α : Φ), (h.coroot α x) • h.coroot α y :=
+begin
+ have := h.to_dual_2.map_add' x y,
+-- rw ←linear_map.to_fun_eq_coe,
+ change (∑ (α : Φ), (h.coroot α x) • h.coroot α) y = _,
+ simp only [linear_map.coe_fn_sum, fintype.sum_apply, linear_map.smul_apply],
+--  rw finset.sum_apply,
+--  rw [← to_dual_2.to_fun],
+end
+
+lemma to_dual_apply_apply_2 (x y : V) :
 h.to_dual x y = ∑ᶠ α, (h.coroot α x) • h.coroot α y :=
 begin
  have := h.to_dual.map_add x y,
- specialize this,
+ specialize this, 
  sorry,
 end
 
