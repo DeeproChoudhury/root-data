@@ -188,7 +188,15 @@ lemma zero_not_mem : (0 : V) ∉ Φ :=
 def weyl_group : subgroup $ units (module.End k V) := subgroup.closure $ range h.symmetry_of_root
 
 -- Estimate high effort.
-lemma finite_weyl_group : finite h.weyl_group := sorry
+lemma finite_weyl_group : finite h.weyl_group :=
+begin
+  haveI : finite Φ := finite_coe_iff.mpr h.finite,
+  obtain ⟨n, hn⟩ := h.finite,
+
+  haveI : finite (range h.symmetry_of_root) := finite_range _,
+  exact finite_subgroup_closure _,
+  sorry
+end
 
 /- Roots span the space and roots are finite so each root symmetry just permutes the roots. Therefore
 the Wyel group is a subgroup of the symmetry group
@@ -318,9 +326,9 @@ begin
  letI : fintype Φ := fintype.of_finite ↥Φ,
  rw finsum_eq_finset_sum_of_support_subset _ (_ : _ ⊆ ↑(finset.univ : finset Φ)),
  rw finsum_eq_finset_sum_of_support_subset _ (_ : _ ⊆ ↑(finset.univ : finset Φ)),
- { exact finset.sum_apply y finset.univ (λ (α : ↥Φ), (h.coroot α) x • h.coroot α)},
+ {simp only [linear_map.coe_fn_sum, fintype.sum_apply, linear_map.smul_apply]},
  {simp only [finset.coe_univ, subset_univ]},
- {simp,},
+ {simp only [finset.coe_univ, support_subset_iff, mem_univ, implies_true_iff]},
 --  simp only [algebra.id.smul_eq_mul],
 --  rw finsum_eq_sum,
  rw [finsum_eq_sum (λ (α : ↥Φ), (h.coroot α) x • (h.coroot α)) h3],
