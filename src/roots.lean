@@ -8,7 +8,20 @@ noncomputable theory
 open_locale tensor_product big_operators classical
 open set function
 
-
+-- This may already exist in some form in Mathlib.
+lemma equiv.symm_apply_mem_of_forall_mem_finite {α : Type*} (e : α ≃ α) {s : set α}
+  (h_mem : ∀ x : s, e x ∈ s) (h_fin : s.finite) (x : s) :
+  e.symm (x : α) ∈ s :=
+begin
+  haveI : fintype s := finite.fintype h_fin,
+  let f : s → s := λ x, ⟨e x, h_mem x⟩,
+  have h_inj : injective f, { rintros ⟨a, ha⟩ ⟨b, hb⟩ hab, simpa using hab, },
+  have h_surj : surjective f :=
+    ((fintype.bijective_iff_injective_and_card f).mpr ⟨h_inj, rfl⟩).2,
+  obtain ⟨y, rfl⟩ := h_surj x,
+  change e.symm (e y) ∈ s,
+  simp,
+end
 
 -- example: char_zero k := strict_ordered_semiring.to_char_zero
 
@@ -175,9 +188,33 @@ lemma zero_not_mem : (0 : V) ∉ Φ :=
 λ contra, by simpa using h.coroot_apply_self_eq_two ⟨0, contra⟩
 
 /-- The Weyl group of a root system. -/
-def weyl_group : subgroup $ units (module.End k V) := subgroup.closure $ range h.symmetry_of_root
+def weyl_group : subgroup $ (module.End k V)ˣ := subgroup.closure $ range h.symmetry_of_root
 
--- Estimate high effort.
+lemma weyl_group_apply_root_mem (w : h.weyl_group) (α : Φ) : w • (α : V) ∈ Φ :=
+begin
+  obtain ⟨w, hw⟩ := w,
+  change w • (α : V) ∈ Φ,
+  revert α,
+  have : ∀ (g : (module.End k V)ˣ), g ∈ range h.symmetry_of_root → ∀ (α : Φ), g • (α : V) ∈ Φ,
+  { rintros - ⟨β, rfl⟩ α, exact h.symmetry_of_root_image_subset β ⟨α, α.property, rfl⟩, },
+  refine subgroup.closure_induction hw this _ (λ g₁ g₂ hg₁ hg₂ α, _) (λ g hg α, _),
+  { simp, },
+  { rw mul_smul, exact hg₁ ⟨_, hg₂ α⟩, },
+  { let e : V ≃ V := ⟨λ x, g • x, λ x, g⁻¹ • x, λ x, by simp, λ x, by simp⟩,
+    exact e.symm_apply_mem_of_forall_mem_finite hg h.finite α, },
+end
+
+-- TODO (maybe) Upgrade to `h.weyl_group →* equiv.perm Φ`
+def weyl_group_to_perm (w : h.weyl_group) : equiv.perm Φ :=
+{ to_fun := λ α, ⟨w • (α : V), h.weyl_group_apply_root_mem w α⟩,
+  inv_fun := λ α, ⟨w⁻¹ • (α : V), h.weyl_group_apply_root_mem w⁻¹ α⟩,
+  left_inv := λ α, by simp,
+  right_inv := λ α, by simp, }
+
+-- Use `h.span_eq_top`.
+lemma injective_weyl_group_to_perm : injective h.weyl_group_to_perm := sorry
+
+-- Use `injective_weyl_group_to_perm`.
 lemma finite_weyl_group : finite h.weyl_group := sorry
 
 /- Roots span the space and roots are finite so each root symmetry just permutes the roots. Therefore
@@ -251,7 +288,7 @@ lemma to_dual_apply_apply_2 (x y : V) :
 h.to_dual x y = ∑ᶠ α, (h.coroot α x) • h.coroot α y :=
 begin
  have := h.to_dual.map_add x y,
- specialize this, 
+ specialize this,
  sorry,
 end
 
