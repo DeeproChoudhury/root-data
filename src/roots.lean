@@ -187,12 +187,19 @@ lemma zero_not_mem : (0 : V) ∉ Φ :=
 /-- The Weyl group of a root system. -/
 def weyl_group : subgroup $ units (module.End k V) := subgroup.closure $ range h.symmetry_of_root
 
+def hom_weyl_group_to_permutation_group (h : is_root_system k Φ) : h.weyl_group →* equiv.perm Φ :=
+{ to_fun := _,
+  map_one' := _,
+  map_mul' := _ }
+
+
 -- Estimate high effort.
 lemma finite_weyl_group : finite h.weyl_group :=
 begin
   haveI : finite Φ := finite_coe_iff.mpr h.finite,
   obtain ⟨n, hn⟩ := h.finite,
 
+  set perm_group := equiv.perm Φ with h_perm_group,
   haveI : finite (range h.symmetry_of_root) := finite_range _,
   exact finite_subgroup_closure _,
   sorry
@@ -329,48 +336,6 @@ begin
  {simp only [linear_map.coe_fn_sum, fintype.sum_apply, linear_map.smul_apply]},
  {simp only [finset.coe_univ, subset_univ]},
  {simp only [finset.coe_univ, support_subset_iff, mem_univ, implies_true_iff]},
---  simp only [algebra.id.smul_eq_mul],
---  rw finsum_eq_sum,
- rw [finsum_eq_sum (λ (α : ↥Φ), (h.coroot α) x • (h.coroot α)) h3],
- {
-    -- change ∑ (i : ↥Φ) in h3.to_finset, (λ (α : ↥Φ), (h.coroot α) x • (h.coroot α) y) i
-    -- = ∑ (i : ↥Φ), (λ (α : ↥Φ), (h.coroot α) x • (h.coroot α) y) i,
-
-    haveI : fintype Φ := h.finite.fintype,
-    have h4 : (support (λ (i : ↥Φ), (h.coroot i) x • (h.coroot i) y)).finite,
-    {
-      apply set.to_finite,
-    },
-    -- rw set.finite.mem_to_finset,
-    -- change ∑ (i : ↥Φ) in h4.to_finset, (λ (α : ↥Φ), (h.coroot α) x • h.coroot α) i
-    -- change (⇑∑ᶠ (α : ↥Φ), (h.coroot α) x • h.coroot α) y = (finset.sum _ _),
-
-    -- simp only [algebra.id.smul_eq_mul, linear_map.coe_fn_sum, finset.sum_apply, linear_map.smul_apply],
-    rw [finsum_eq_sum (λ (i : ↥Φ), (h.coroot i) x • (h.coroot i) y) h4],
-    simp only [algebra.id.smul_eq_mul, linear_map.coe_fn_sum, finset.sum_apply, finset.sum_const, linear_map.smul_apply],
-    congr',
-    simp,
-
-    refl,
-    -- rw [finsum_eq_sum (λ (i : ↥Φ), (h.coroot i) x • (h.coroot i)) h3],
-    rw [←finset.sum_apply],
-    rw [finsum_eq_sum (λ (i : ↥Φ), (h.coroot i) x • h.coroot i) h4],
-    congr',
-    simp only [linear_map.coe_fn_sum, finset.sum_apply, linear_map.smul_apply, algebra.id.smul_eq_mul],
-    -- rw finset.prod_apply,
-    -- simp only [linear_map.coe_fn_sum, fintype.sum_apply, linear_map.smul_apply],
-    -- rw fintype.sum_apply,
-    sorry,
- },
- {
-  haveI : finite Φ := finite_coe_iff.mpr h.finite,
-  apply set.to_finite,
- }
-
- unfold_coes,
- simp_rw [←smul_smul],
- simp,
- sorry,
 end
 
 /-- The bilinear map on `V` induced by a root system. -/
