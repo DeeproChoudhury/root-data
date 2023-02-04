@@ -145,6 +145,18 @@ units.ext $ module.to_pre_symmetry_sq $ coroot_apply_self_eq_two h α
   h.symmetry_of_root α '' Φ ⊆ Φ :=
 (classical.some_spec (h.exists_dual _ α.property)).2
 
+example (X : Type*) (x : X) (S : set X) (hs : S ⊆ {x}) (hs': S.nonempty) : S = {x} :=
+begin
+  ext y,
+  rw [mem_singleton_iff],
+  simp only [subset_singleton_iff] at hs,
+  refine ⟨λ hy, hs _ hy, _⟩,
+  rintros rfl,
+  obtain ⟨p, hp⟩ := hs',
+  rwa ←hs _ hp,
+end
+
+
 @[simp] lemma neg_mem (α : Φ) : - (α : V) ∈ Φ :=
 begin
   have := (image_subset_iff.mp $ h.symmetry_of_root_image_subset α) α.property,
@@ -188,15 +200,21 @@ lemma zero_not_mem : (0 : V) ∉ Φ :=
 λ contra, by simpa using h.coroot_apply_self_eq_two ⟨0, contra⟩
 
 /-- The Weyl group of a root system. -/
+-- reflections are invertible endomorphisms and sit in the endomorphism ring
+-- i.e. they are all units in the automorphism group
 def weyl_group : subgroup $ (module.End k V)ˣ := subgroup.closure $ range h.symmetry_of_root
 
+-- w acts on α and sends roots to roots (acts on roots)
+-- w acting on α gives a root, not a random vector
 lemma weyl_group_apply_root_mem (w : h.weyl_group) (α : Φ) : w • (α : V) ∈ Φ :=
 begin
   obtain ⟨w, hw⟩ := w,
   change w • (α : V) ∈ Φ,
+  -- induction w generalizing α,
   revert α,
   have : ∀ (g : (module.End k V)ˣ), g ∈ range h.symmetry_of_root → ∀ (α : Φ), g • (α : V) ∈ Φ,
   { rintros - ⟨β, rfl⟩ α, exact h.symmetry_of_root_image_subset β ⟨α, α.property, rfl⟩, },
+  -- Look up what this means
   refine subgroup.closure_induction hw this _ (λ g₁ g₂ hg₁ hg₂ α, _) (λ g hg α, _),
   { simp, },
   { rw mul_smul, exact hg₁ ⟨_, hg₂ α⟩, },
@@ -210,6 +228,19 @@ def weyl_group_to_perm (w : h.weyl_group) : equiv.perm Φ :=
   inv_fun := λ α, ⟨w⁻¹ • (α : V), h.weyl_group_apply_root_mem w⁻¹ α⟩,
   left_inv := λ α, by simp,
   right_inv := λ α, by simp, }
+
+def weyl_group_to_perm' : h.weyl_group →* equiv.perm Φ :=
+{ to_fun := h.weyl_group_to_perm,
+  map_one' := begin
+   ext,
+   simp [weyl_group_to_perm],
+  end,
+  map_mul' := begin
+  intros α β,
+  ext,
+  simp [weyl_group_to_perm, mul_smul],
+  end, }
+#check h.weyl_group_to_perm
 
 -- Use `h.span_eq_top`.
 lemma injective_weyl_group_to_perm : injective h.weyl_group_to_perm := sorry
