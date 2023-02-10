@@ -270,6 +270,10 @@ begin
   change w v = v,
   -- have := h.span_eq_top,
   have := fun_like.congr_fun hw,
+  simp at this,
+  have mem1: v ∈ submodule.span k Φ,
+  { rw h.span_eq_top,
+  trivial, },
   sorry,
 end
 
