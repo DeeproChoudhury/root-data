@@ -2,6 +2,7 @@ import linear_algebra.dual
 import linear_algebra.contraction
 import linear_algebra.bilinear_form
 import data.sign
+import tactic.default
 
 noncomputable theory
 
@@ -63,19 +64,27 @@ end module
 
 section root_systems
 
+
 /-- A crystallographic root system (possibly non-reduced). -/
 @[protect_proj]
 class is_root_system (k : Type*) {V : Type*} [comm_ring k] [char_zero k] [add_comm_group V] [module k V]
 (Φ : set V) : Prop :=
-(finite : set.finite Φ)
+(finite : Φ.finite)
 (span_eq_top : submodule.span k Φ = ⊤)
 (exists_dual : ∀ α ∈ Φ, ∃ f : module.dual k V, f α = 2 ∧ module.to_pre_symmetry α f '' Φ ⊆ Φ)
 (subset_zmultiples : ∀ (α ∈ Φ) (f : module.dual k V),
   f α = 2 ∧ module.to_pre_symmetry α f '' Φ ⊆ Φ → f '' Φ ⊆ add_subgroup.zmultiples (1 : k))
 /-image of phi under the map f is a subset copy of the integers that live in k -/
 
+@[protect_proj]
+class is_root_system' (k : Type*) {V : Type*} [comm_ring k] [char_zero k] [add_comm_group V] [module k V]
+(Φ : set V) [fintype Φ] : Prop :=
+(span_eq_top : submodule.span k Φ = ⊤)
+(exists_dual : ∀ α ∈ Φ, ∃ f : module.dual k V, f α = 2 ∧ module.to_pre_symmetry α f '' Φ ⊆ Φ)
+(subset_zmultiples : ∀ (α ∈ Φ) (f : module.dual k V),
+  f α = 2 ∧ module.to_pre_symmetry α f '' Φ ⊆ Φ → f '' Φ ⊆ add_subgroup.zmultiples (1 : k))
 
-instance is_root_system_set_finite (k : Type*) (V : Type*) {Φ : set V}
+def is_root_system_set_finite (k : Type*) (V : Type*) {Φ : set V}
 [comm_ring k] [char_zero k] [add_comm_group V] [module k V] [is_root_system k Φ] : fintype Φ
 :=
 -- by infer_instance
@@ -104,6 +113,7 @@ section field
 variables {k V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
 
 variables {Φ : set V} (h : is_root_system k Φ)
+variables {Φ' : set V} [fintype Φ'] (h' : is_root_system' k Φ')
 include h
 
 -- #check @basis.mk _ k V _ _ _ _
@@ -222,6 +232,7 @@ begin
     exact e.symm_apply_mem_of_forall_mem_finite hg h.finite α, },
 end
 
+
 -- TODO (maybe) Upgrade to `h.weyl_group →* equiv.perm Φ`
 @[simps]
 def weyl_group_to_perm (w : h.weyl_group) : equiv.perm Φ :=
@@ -281,63 +292,121 @@ def to_dual : V →ₗ[k] module.dual k V :=
     simp_rw [add_smul],
     rw finsum_add_distrib,
     simp only [linear_map.add_apply],
+    {
+      haveI : finite Φ := finite_coe_iff.mpr h.finite,
+      apply set.to_finite,
+    },
+    {
+      haveI : finite Φ := finite_coe_iff.mpr h.finite,
+      apply set.to_finite,
+    }
 
 --    push_cast,
 
     -- change ∑ᶠ α, (h.coroot α x + h.coroot α y) • h.coroot α = ∑ᶠ α, (h.coroot α x) • h.coroot α + ∑ᶠ α, (h.coroot α y) • h.coroot α,
-    sorry,
-    sorry,
-  end,
-  map_smul' := λ c x, by { ext, simp only [linear_map.map_smulₛₗ, ring_hom.id_apply, algebra.id.smul_eq_mul, linear_map.smul_apply],
-   sorry, }, }
-
-example (a b : k) (c : module.dual k V) : (a * b) • c = a • (b • c) := (smul_smul a b c).symm
-
-  /-- The linear map `V → V⋆` induced by a root system. -/
-def to_dual_2 : V →ₗ[k] module.dual k V :=
-{ to_fun := λ x, ∑ (α : Φ), (h.coroot α x) • h.coroot α,
-  map_add' :=
-  begin
-    intros x y,
-    ext,
-    simp only [linear_map.map_add, map_add, linear_map.add_apply],
-    simp_rw [add_smul],
-    rw finset.sum_add_distrib,
-    rw linear_map.add_apply,
   end,
   map_smul' :=
   begin
     intros c x,
     ext,
     simp only [linear_map.map_smulₛₗ, ring_hom.id_apply, algebra.id.smul_eq_mul, linear_map.smul_apply],
-    simp_rw [← smul_smul],
-    rw [← finset.smul_sum],
-    rw linear_map.smul_apply,
-    rw smul_eq_mul,
-
-    -- simp,
-    -- sorry,
+    simp_rw [←smul_smul],
+    rw [← smul_finsum],
+    simp only [linear_map.smul_apply, algebra.id.smul_eq_mul],
   end
-}
+  }
 
-/-- to_dual is really a bilinear form which gives you a number. This is the Euclidean form-/
-lemma to_dual_apply_apply (x y : V) :
-h.to_dual_2 x y = ∑ (α : Φ), (h.coroot α x) • h.coroot α y :=
+example (a b : k) (c : module.dual k V) : (a * b) • c = a • (b • c) := (smul_smul a b c).symm
+
+  /-- The linear map `V → V⋆` induced by a root system. -/
+-- def to_dual_2 : V →ₗ[k] module.dual k V :=
+-- { to_fun := λ x, ∑ (α : Φ), (h.coroot α x) • h.coroot α,
+--   map_add' :=
+--   begin
+--     intros x y,
+--     ext,
+--     simp only [linear_map.map_add, map_add, linear_map.add_apply],
+--     simp_rw [add_smul],
+--     rw finset.sum_add_distrib,
+--     -- simp,
+--     rw linear_map.add_apply,
+--   end,
+--   map_smul' :=
+--   begin
+--     intros c x,
+--     ext,
+--     simp only [linear_map.map_smulₛₗ, ring_hom.id_apply, algebra.id.smul_eq_mul, linear_map.smul_apply],
+--     simp_rw [← smul_smul],
+--     rw [← finset.smul_sum],
+--     rw linear_map.smul_apply,
+--     rw smul_eq_mul,
+
+--     -- simp,
+--     -- sorry,
+--   end
+-- }
+
+-- to_dual is really a bilinear form which gives you a number. This is the Euclidean form-/
+-- lemma to_dual_apply_apply (x y : V) :
+-- h.to_dual_2 x y = ∑ (α : Φ), (h.coroot α x) • h.coroot α y :=
+-- begin
+--  have := h.to_dual_2.map_add' x y,
+-- -- rw ←linear_map.to_fun_eq_coe,
+--  change (∑ (α : Φ), (h.coroot α x) • h.coroot α) y = _,
+--  simp only [linear_map.coe_fn_sum, fintype.sum_apply, linear_map.smul_apply],
+-- --  rw finset.sum_apply,
+-- --  rw [← to_dual_2.to_fun],
+-- end
+
+-- lemma finsum_apply {α : Type*} {M : Type*} [add_comm_monoid M] (f : α → M) (a : α) (hf : (support f).finite)
+-- : (∑ᶠ c : α, f c) a = (∑ c in hf.to_finite, f c a) :=
+
+-- lemma finsum_apply' {α : Type*} {β : α → Type*} {γ} [∀a, comm_monoid (β a)]
+-- (a : α) (g : γ → Πa, β a) (hg : (support f).finite) :
+
+-- lemma finsum_apply_2 {α : Type*} {β : α → Type*} {γ : Type*} {M : Type*} [Π (a : α), add_comm_monoid (β a)]
+-- [add_comm_monoid M] (a : α) (s : γ) (f : α → M) (hf : (support f).finite) (g : γ → Π (a : α), β a) :
+-- (∑ᶠ c : α, f c) a = (∑ c in hf.to_finset, f c a) :=
+
+
+variables {β : Type*} {s : set β} [finite β]
+-- instance sfinite [finite β] {s : set β} : finite s := subtype.finite
+example (M : Type*) [add_comm_monoid M] [f : s → M] (p : s):
+(∑ᶠ (α : s), f) p = ∑ᶠ (α : s), f p
+:=
 begin
- have := h.to_dual_2.map_add' x y,
--- rw ←linear_map.to_fun_eq_coe,
- change (∑ (α : Φ), (h.coroot α x) • h.coroot α) y = _,
- simp only [linear_map.coe_fn_sum, fintype.sum_apply, linear_map.smul_apply],
---  rw finset.sum_apply,
---  rw [← to_dual_2.to_fun],
+  have h1 : (support (λ (i : ↥s), f)).finite,
+  {
+    apply set.to_finite,
+  },
+  rw [finsum_eq_sum (λ (i : ↥s), f) h1],
+  have h2 : (support (λ (i : ↥s), f p)).finite,
+  {
+    apply set.to_finite,
+  },
+  rw [finsum_eq_sum (λ (i : ↥s), f p) h2],
+  simp only [finset.sum_apply],
+  congr',
+  sorry,
 end
 
 lemma to_dual_apply_apply_2 (x y : V) :
 h.to_dual x y = ∑ᶠ α, (h.coroot α x) • h.coroot α y :=
 begin
  have := h.to_dual.map_add x y,
- specialize this,
- sorry,
+
+--  rw ←linear_map.to_fun_eq_coe,
+--  change (∑ᶠ (α : Φ), (h.coroot α x) • h.coroot α) y = _,
+--  simp only [algebra.id.smul_eq_mul],
+ haveI h2 : finite Φ := finite_coe_iff.mpr h.finite,
+ have h3 : (support (λ (α : ↥Φ), (h.coroot α) x • h.coroot α)).finite, by apply set.to_finite,
+ change (∑ᶠ (α : Φ), (h.coroot α x) • h.coroot α) y = _,
+ letI : fintype Φ := fintype.of_finite ↥Φ,
+ rw finsum_eq_finset_sum_of_support_subset _ (_ : _ ⊆ ↑(finset.univ : finset Φ)),
+ rw finsum_eq_finset_sum_of_support_subset _ (_ : _ ⊆ ↑(finset.univ : finset Φ)),
+ {simp only [linear_map.coe_fn_sum, fintype.sum_apply, linear_map.smul_apply]},
+ {simp only [finset.coe_univ, subset_univ]},
+ {simp only [finset.coe_univ, support_subset_iff, mem_univ, implies_true_iff]},
 end
 
 /-- The bilinear map on `V` induced by a root system. -/
