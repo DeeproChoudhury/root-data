@@ -203,7 +203,7 @@ lemma zero_not_mem : (0 : V) ∉ Φ :=
 -- reflections are invertible endomorphisms and sit in the endomorphism ring
 -- i.e. they are all units in the automorphism group
 def weyl_group : subgroup $ (module.End k V)ˣ := subgroup.closure $ range h.symmetry_of_root
-
+#check has_vadd.vadd
 -- w acts on α and sends roots to roots (acts on roots)
 -- w acting on α gives a root, not a random vector
 lemma weyl_group_apply_root_mem (w : h.weyl_group) (α : Φ) : w • (α : V) ∈ Φ :=
@@ -223,12 +223,14 @@ begin
 end
 
 -- TODO (maybe) Upgrade to `h.weyl_group →* equiv.perm Φ`
+@[simps]
 def weyl_group_to_perm (w : h.weyl_group) : equiv.perm Φ :=
 { to_fun := λ α, ⟨w • (α : V), h.weyl_group_apply_root_mem w α⟩,
   inv_fun := λ α, ⟨w⁻¹ • (α : V), h.weyl_group_apply_root_mem w⁻¹ α⟩,
   left_inv := λ α, by simp,
   right_inv := λ α, by simp, }
 
+@[simps]
 def weyl_group_to_perm' : h.weyl_group →* equiv.perm Φ :=
 { to_fun := h.weyl_group_to_perm,
   map_one' := begin
@@ -243,7 +245,22 @@ def weyl_group_to_perm' : h.weyl_group →* equiv.perm Φ :=
 #check h.weyl_group_to_perm
 
 -- Use `h.span_eq_top`.
-lemma injective_weyl_group_to_perm : injective h.weyl_group_to_perm := sorry
+lemma injective_weyl_group_to_perm : injective h.weyl_group_to_perm' :=
+begin
+  rw ←monoid_hom.ker_eq_bot_iff, -- Injective is the same as ker = ⊥
+  rw eq_bot_iff,
+  intros w hw, -- Let w ∈ ker f
+  rw subgroup.mem_bot, -- w ∈ ⊥ ↔ w = 1
+  rw monoid_hom.mem_ker at hw, -- x ∈ ker f ↔ f x = 1
+  have hw' := fun_like.congr_fun hw, --Functions are equal if that agree for all values
+  change ∀ x, _ = x at hw',
+  -- intros x y hw,
+  ext v,
+  change w v = v,
+  -- have := h.span_eq_top,
+  have := fun_like.congr_fun hw,
+  sorry,
+end
 
 -- Use `injective_weyl_group_to_perm`.
 lemma finite_weyl_group : finite h.weyl_group := sorry
