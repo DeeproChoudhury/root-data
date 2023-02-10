@@ -9,7 +9,20 @@ noncomputable theory
 open_locale tensor_product big_operators classical
 open set function
 
-
+-- This may already exist in some form in Mathlib.
+lemma equiv.symm_apply_mem_of_forall_mem_finite {α : Type*} (e : α ≃ α) {s : set α}
+  (h_mem : ∀ x : s, e x ∈ s) (h_fin : s.finite) (x : s) :
+  e.symm (x : α) ∈ s :=
+begin
+  haveI : fintype s := finite.fintype h_fin,
+  let f : s → s := λ x, ⟨e x, h_mem x⟩,
+  have h_inj : injective f, { rintros ⟨a, ha⟩ ⟨b, hb⟩ hab, simpa using hab, },
+  have h_surj : surjective f :=
+    ((fintype.bijective_iff_injective_and_card f).mpr ⟨h_inj, rfl⟩).2,
+  obtain ⟨y, rfl⟩ := h_surj x,
+  change e.symm (e y) ∈ s,
+  simp,
+end
 
 -- example: char_zero k := strict_ordered_semiring.to_char_zero
 
@@ -142,6 +155,18 @@ units.ext $ module.to_pre_symmetry_sq $ coroot_apply_self_eq_two h α
   h.symmetry_of_root α '' Φ ⊆ Φ :=
 (classical.some_spec (h.exists_dual _ α.property)).2
 
+example (X : Type*) (x : X) (S : set X) (hs : S ⊆ {x}) (hs': S.nonempty) : S = {x} :=
+begin
+  ext y,
+  rw [mem_singleton_iff],
+  simp only [subset_singleton_iff] at hs,
+  refine ⟨λ hy, hs _ hy, _⟩,
+  rintros rfl,
+  obtain ⟨p, hp⟩ := hs',
+  rwa ←hs _ hp,
+end
+
+
 @[simp] lemma neg_mem (α : Φ) : - (α : V) ∈ Φ :=
 begin
   have := (image_subset_iff.mp $ h.symmetry_of_root_image_subset α) α.property,
@@ -185,25 +210,71 @@ lemma zero_not_mem : (0 : V) ∉ Φ :=
 λ contra, by simpa using h.coroot_apply_self_eq_two ⟨0, contra⟩
 
 /-- The Weyl group of a root system. -/
-def weyl_group : subgroup $ units (module.End k V) := subgroup.closure $ range h.symmetry_of_root
-
-def hom_weyl_group_to_permutation_group (h : is_root_system k Φ) : h.weyl_group →* equiv.perm Φ :=
-{ to_fun := _,
-  map_one' := _,
-  map_mul' := _ }
-
-
--- Estimate high effort.
-lemma finite_weyl_group : finite h.weyl_group :=
+-- reflections are invertible endomorphisms and sit in the endomorphism ring
+-- i.e. they are all units in the automorphism group
+def weyl_group : subgroup $ (module.End k V)ˣ := subgroup.closure $ range h.symmetry_of_root
+#check has_vadd.vadd
+-- w acts on α and sends roots to roots (acts on roots)
+-- w acting on α gives a root, not a random vector
+lemma weyl_group_apply_root_mem (w : h.weyl_group) (α : Φ) : w • (α : V) ∈ Φ :=
 begin
-  haveI : finite Φ := finite_coe_iff.mpr h.finite,
-  obtain ⟨n, hn⟩ := h.finite,
-
-  set perm_group := equiv.perm Φ with h_perm_group,
-  haveI : finite (range h.symmetry_of_root) := finite_range _,
-  exact finite_subgroup_closure _,
-  sorry
+  obtain ⟨w, hw⟩ := w,
+  change w • (α : V) ∈ Φ,
+  -- induction w generalizing α,
+  revert α,
+  have : ∀ (g : (module.End k V)ˣ), g ∈ range h.symmetry_of_root → ∀ (α : Φ), g • (α : V) ∈ Φ,
+  { rintros - ⟨β, rfl⟩ α, exact h.symmetry_of_root_image_subset β ⟨α, α.property, rfl⟩, },
+  -- Look up what this means
+  refine subgroup.closure_induction hw this _ (λ g₁ g₂ hg₁ hg₂ α, _) (λ g hg α, _),
+  { simp, },
+  { rw mul_smul, exact hg₁ ⟨_, hg₂ α⟩, },
+  { let e : V ≃ V := ⟨λ x, g • x, λ x, g⁻¹ • x, λ x, by simp, λ x, by simp⟩,
+    exact e.symm_apply_mem_of_forall_mem_finite hg h.finite α, },
 end
+
+
+-- TODO (maybe) Upgrade to `h.weyl_group →* equiv.perm Φ`
+@[simps]
+def weyl_group_to_perm (w : h.weyl_group) : equiv.perm Φ :=
+{ to_fun := λ α, ⟨w • (α : V), h.weyl_group_apply_root_mem w α⟩,
+  inv_fun := λ α, ⟨w⁻¹ • (α : V), h.weyl_group_apply_root_mem w⁻¹ α⟩,
+  left_inv := λ α, by simp,
+  right_inv := λ α, by simp, }
+
+@[simps]
+def weyl_group_to_perm' : h.weyl_group →* equiv.perm Φ :=
+{ to_fun := h.weyl_group_to_perm,
+  map_one' := begin
+   ext,
+   simp [weyl_group_to_perm],
+  end,
+  map_mul' := begin
+  intros α β,
+  ext,
+  simp [weyl_group_to_perm, mul_smul],
+  end, }
+#check h.weyl_group_to_perm
+
+-- Use `h.span_eq_top`.
+lemma injective_weyl_group_to_perm : injective h.weyl_group_to_perm' :=
+begin
+  rw ←monoid_hom.ker_eq_bot_iff, -- Injective is the same as ker = ⊥
+  rw eq_bot_iff,
+  intros w hw, -- Let w ∈ ker f
+  rw subgroup.mem_bot, -- w ∈ ⊥ ↔ w = 1
+  rw monoid_hom.mem_ker at hw, -- x ∈ ker f ↔ f x = 1
+  have hw' := fun_like.congr_fun hw, --Functions are equal if that agree for all values
+  change ∀ x, _ = x at hw',
+  -- intros x y hw,
+  ext v,
+  change w v = v,
+  -- have := h.span_eq_top,
+  have := fun_like.congr_fun hw,
+  sorry,
+end
+
+-- Use `injective_weyl_group_to_perm`.
+lemma finite_weyl_group : finite h.weyl_group := sorry
 
 /- Roots span the space and roots are finite so each root symmetry just permutes the roots. Therefore
 the Wyel group is a subgroup of the symmetry group
