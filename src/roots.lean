@@ -24,7 +24,13 @@ begin
   simp,
 end
 
--- example: char_zero k := strict_ordered_semiring.to_char_zero
+lemma nat.eq_one_or_two_or_four_of_div_four {n : ℕ} (h : n ∣ 4) : n = 1 ∨ n = 2 ∨ n = 4 :=
+begin
+  have h₁ := nat.le_of_dvd four_pos h,
+  interval_cases n with h;
+  revert h;
+  dec_trivial,
+end
 
 namespace module
 
@@ -64,7 +70,6 @@ end module
 
 section root_systems
 
-
 /-- A crystallographic root system (possibly non-reduced). -/
 @[protect_proj]
 class is_root_system (k : Type*) {V : Type*} [comm_ring k] [char_zero k] [add_comm_group V] [module k V]
@@ -76,24 +81,6 @@ class is_root_system (k : Type*) {V : Type*} [comm_ring k] [char_zero k] [add_co
   f α = 2 ∧ module.to_pre_symmetry α f '' Φ ⊆ Φ → f '' Φ ⊆ add_subgroup.zmultiples (1 : k))
 /-image of phi under the map f is a subset copy of the integers that live in k -/
 
-@[protect_proj]
-class is_root_system' (k : Type*) {V : Type*} [comm_ring k] [char_zero k] [add_comm_group V] [module k V]
-(Φ : set V) [fintype Φ] : Prop :=
-(span_eq_top : submodule.span k Φ = ⊤)
-(exists_dual : ∀ α ∈ Φ, ∃ f : module.dual k V, f α = 2 ∧ module.to_pre_symmetry α f '' Φ ⊆ Φ)
-(subset_zmultiples : ∀ (α ∈ Φ) (f : module.dual k V),
-  f α = 2 ∧ module.to_pre_symmetry α f '' Φ ⊆ Φ → f '' Φ ⊆ add_subgroup.zmultiples (1 : k))
-
-def is_root_system_set_finite (k : Type*) (V : Type*) {Φ : set V}
-[comm_ring k] [char_zero k] [add_comm_group V] [module k V] [is_root_system k Φ] : fintype Φ
-:=
--- by infer_instance
-begin
-  refine finite.fintype _,
-  exact is_root_system.finite k,
-  -- letI := classical.dec_eq V,
-end
-
 /-- A reduced, crystallographic root system. -/
 structure is_reduced_root_system (k : Type*) {V : Type*} [comm_ring k] [char_zero k] [add_comm_group V] [module k V]
 (Φ : set V) extends is_root_system k Φ : Prop :=
@@ -101,7 +88,6 @@ structure is_reduced_root_system (k : Type*) {V : Type*} [comm_ring k] [char_zer
 
 namespace is_root_system
 
-/-- Need ordering for base, k and V are locally shadowing here-/
 structure is_base {k V ι : Type*} [linear_ordered_field k] [add_comm_group V] [module k V]
 {Φ : set V} (h : is_root_system k Φ)
 (b : basis ι k V) : Prop :=
@@ -113,18 +99,7 @@ section field
 variables {k V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
 
 variables {Φ : set V} (h : is_root_system k Φ)
-variables {Φ' : set V} [fintype Φ'] (h' : is_root_system' k Φ')
 include h
-
--- #check @basis.mk _ k V _ _ _ _
--- def has_base (b : set V) : Prop := b ⊆ Φ ∧ linear_independent k (coe : b → V) ∧ submodule.span k b = ⊤
--- ∧ more conditions
-
--- def has_base {ι : Type*} (b : basis ι k V) : Prop := ∀ (α ∈ Φ) (i : ι),
--- b.coord i α ∈ add_subgroup.zmultiples (1 : k)
--- ∧ ((∀ (i : ι),  ) ∨ (∀ (i : ι), sign_neg))
-
-
 
 /-- The coroot of a root.
 
@@ -145,64 +120,30 @@ module.to_pre_symmetry_apply_self $ h.coroot_apply_self_eq_two α
 
 lemma symmetry_of_root_sq (α : Φ) : (h.symmetry_of_root α)^2 = 1 :=
 units.ext $ module.to_pre_symmetry_sq $ coroot_apply_self_eq_two h α
--- module.to_pre_symmetry_sq $ _--module.to_pre_symmetry_sq $ h.coroot_apply_self_eq_two α
-#print axioms symmetry_of_root_sq
-#check @funext
-#print axioms funext
-#print axioms classical.choice
 
-
-.
-
-
--- ∀ β ∈ (range h.coroot), ∃ f : module.dual k (module.dual k V),
---   f β = 2 ∧ module.to_pre_symmetry β f ' (range h.coroot) ⊆ (range h.coroot):=
--- begin
---   intros x hx,
---   have := hx.some_spec,
---   -- rintros _ ⟨α, rfl⟩,
---   -- use module.dual.eval k V α,
---   -- rw module.dual.eval_apply,
---   -- split,
---   -- {  },
---   -- sorry,
--- end
-
--- Def of dual root system
+/-- A root system in `V` naturally determines another root system in the dual `V^*`. -/
 lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
-{ finite := begin
+{ finite :=
+  begin
     sorry,
   end,
-  span_eq_top := begin
-    rw eq_top_iff,
-    intros x hx,
-
-
-
-
-
+  span_eq_top :=
+  begin
+    refine eq_top_iff.mpr (λ x hx, _),
   sorry,
   end,
-  exists_dual := begin sorry, end,
-  subset_zmultiples := begin sorry end, }
-
-
+  exists_dual :=
+  begin
+    sorry,
+  end,
+  subset_zmultiples :=
+  begin
+    sorry,
+  end, }
 
 @[simp] lemma symmetry_of_root_image_subset (α : Φ) :
   h.symmetry_of_root α '' Φ ⊆ Φ :=
 (classical.some_spec (h.exists_dual _ α.property)).2
-
-example (X : Type*) (x : X) (S : set X) (hs : S ⊆ {x}) (hs': S.nonempty) : S = {x} :=
-begin
-  ext y,
-  rw [mem_singleton_iff],
-  simp only [subset_singleton_iff] at hs,
-  refine ⟨λ hy, hs _ hy, _⟩,
-  rintros rfl,
-  obtain ⟨p, hp⟩ := hs',
-  rwa ←hs _ hp,
-end
-
 
 @[simp] lemma neg_mem (α : Φ) : - (α : V) ∈ Φ :=
 begin
@@ -229,10 +170,7 @@ begin
   rw add_subgroup.mem_zmultiples_iff at hr,
   simp only [int.smul_one_eq_coe] at hr,
   obtain ⟨a, ha⟩ := hr,
-  use a,
-  rw ha,
-  -- simp_rw [eq_comm],
-  -- assumption,
+  exact ⟨a, ha.symm⟩,
 end
 
 lemma exists_int_coroot_apply_eq (α β : Φ) :
@@ -250,14 +188,13 @@ lemma zero_not_mem : (0 : V) ∉ Φ :=
 -- reflections are invertible endomorphisms and sit in the endomorphism ring
 -- i.e. they are all units in the automorphism group
 def weyl_group : subgroup $ (module.End k V)ˣ := subgroup.closure $ range h.symmetry_of_root
-#check has_vadd.vadd
+
 -- w acts on α and sends roots to roots (acts on roots)
 -- w acting on α gives a root, not a random vector
 lemma weyl_group_apply_root_mem (w : h.weyl_group) (α : Φ) : w • (α : V) ∈ Φ :=
 begin
   obtain ⟨w, hw⟩ := w,
   change w • (α : V) ∈ Φ,
-  -- induction w generalizing α,
   revert α,
   have : ∀ (g : (module.End k V)ˣ), g ∈ range h.symmetry_of_root → ∀ (α : Φ), g • (α : V) ∈ Φ,
   { rintros - ⟨β, rfl⟩ α, exact h.symmetry_of_root_image_subset β ⟨α, α.property, rfl⟩, },
@@ -269,8 +206,6 @@ begin
     exact e.symm_apply_mem_of_forall_mem_finite hg h.finite α, },
 end
 
-
--- TODO (maybe) Upgrade to `h.weyl_group →* equiv.perm Φ`
 @[simps]
 def weyl_group_to_perm (w : h.weyl_group) : equiv.perm Φ :=
 { to_fun := λ α, ⟨w • (α : V), h.weyl_group_apply_root_mem w α⟩,
@@ -290,9 +225,7 @@ def weyl_group_to_perm' : h.weyl_group →* equiv.perm Φ :=
   ext,
   simp [weyl_group_to_perm, mul_smul],
   end, }
-#check h.weyl_group_to_perm
 
--- Use `h.span_eq_top`.
 lemma injective_weyl_group_to_perm : injective h.weyl_group_to_perm' :=
 begin
   rw ←monoid_hom.ker_eq_bot_iff, -- Injective is the same as ker = ⊥
@@ -302,28 +235,20 @@ begin
   rw monoid_hom.mem_ker at hw, -- x ∈ ker f ↔ f x = 1
   have hw' := fun_like.congr_fun hw, --Functions are equal if that agree for all values
   change ∀ x, _ = x at hw',
-  -- intros x y hw,
   ext v,
   change w v = v,
-  -- have := h.span_eq_top,
   have := fun_like.congr_fun hw,
   simp only [weyl_group_to_perm'_apply, equiv.perm.coe_one, id.def, set_coe.forall] at this,
   have mem1: v ∈ submodule.span k Φ,
   { rw h.span_eq_top,
   trivial, },
-  -- rw finsupp.span_eq_range_total at mem1,
-  -- obtain ⟨f, hf⟩ := mem1,
   apply submodule.span_induction mem1,
   { intros x hx,
     specialize hw' ⟨x, hx⟩,
     dsimp [weyl_group_to_perm, (•)] at hw',
     simp at hw',
     exact hw', },
-  { exact linear_map.map_zero _,
-    -- obtain ⟨⟨w, hw1⟩, hw2⟩ := w,
-    -- change w 0 = 0,
-    -- simp only [map_zero],
-  },
+  { exact linear_map.map_zero _, },
   { intros x y hx hy,
     erw linear_map.map_add,
     change w x + w y = x + y,
@@ -334,8 +259,6 @@ begin
     rw hx, },
 end
 
-
--- Use `injective_weyl_group_to_perm`.
 lemma finite_weyl_group : finite h.weyl_group :=
 begin
   suffices : finite (equiv.perm Φ),
@@ -345,7 +268,6 @@ begin
   exact equiv.finite_left,
 end
 
--- #exit
 /- Roots span the space and roots are finite so each root symmetry just permutes the roots. Therefore
 the Wyel group is a subgroup of the symmetry group
 subgroups closure induction-/
@@ -353,138 +275,47 @@ subgroups closure induction-/
 /-- The linear map `V → V⋆` induced by a root system. -/
 def to_dual : V →ₗ[k] module.dual k V :=
 { to_fun := λ x, ∑ᶠ α, (h.coroot α x) • h.coroot α,
-  map_add' :=
+  map_add' := λ x y ,
   begin
-    intros x y,
     ext,
-    simp only [linear_map.map_add, map_add],
-    simp only [linear_map.add_apply],
-    simp_rw [add_smul],
+    simp only [linear_map.map_add, map_add, linear_map.add_apply, add_smul],
     rw finsum_add_distrib,
     simp only [linear_map.add_apply],
-    {
-      haveI : finite Φ := finite_coe_iff.mpr h.finite,
-      apply set.to_finite,
-    },
-    {
-      haveI : finite Φ := finite_coe_iff.mpr h.finite,
-      apply set.to_finite,
-    }
-
---    push_cast,
-
-    -- change ∑ᶠ α, (h.coroot α x + h.coroot α y) • h.coroot α = ∑ᶠ α, (h.coroot α x) • h.coroot α + ∑ᶠ α, (h.coroot α y) • h.coroot α,
+    { haveI : finite Φ := finite_coe_iff.mpr h.finite,
+      apply set.to_finite, },
+    { haveI : finite Φ := finite_coe_iff.mpr h.finite,
+      apply set.to_finite, },
   end,
   map_smul' :=
   begin
     intros c x,
     ext,
-    simp only [linear_map.map_smulₛₗ, ring_hom.id_apply, algebra.id.smul_eq_mul, linear_map.smul_apply],
-    simp_rw [←smul_smul],
+    simp only [linear_map.map_smulₛₗ, ring_hom.id_apply, algebra.id.smul_eq_mul,
+      linear_map.smul_apply, ←smul_smul],
     rw [← smul_finsum],
     simp only [linear_map.smul_apply, algebra.id.smul_eq_mul],
-  end
-  }
+  end }
 
-example (a b : k) (c : module.dual k V) : (a * b) • c = a • (b • c) := (smul_smul a b c).symm
-
-  /-- The linear map `V → V⋆` induced by a root system. -/
--- def to_dual_2 : V →ₗ[k] module.dual k V :=
--- { to_fun := λ x, ∑ (α : Φ), (h.coroot α x) • h.coroot α,
---   map_add' :=
---   begin
---     intros x y,
---     ext,
---     simp only [linear_map.map_add, map_add, linear_map.add_apply],
---     simp_rw [add_smul],
---     rw finset.sum_add_distrib,
---     -- simp,
---     rw linear_map.add_apply,
---   end,
---   map_smul' :=
---   begin
---     intros c x,
---     ext,
---     simp only [linear_map.map_smulₛₗ, ring_hom.id_apply, algebra.id.smul_eq_mul, linear_map.smul_apply],
---     simp_rw [← smul_smul],
---     rw [← finset.smul_sum],
---     rw linear_map.smul_apply,
---     rw smul_eq_mul,
-
---     -- simp,
---     -- sorry,
---   end
--- }
-
--- to_dual is really a bilinear form which gives you a number. This is the Euclidean form-/
--- lemma to_dual_apply_apply (x y : V) :
--- h.to_dual_2 x y = ∑ (α : Φ), (h.coroot α x) • h.coroot α y :=
--- begin
---  have := h.to_dual_2.map_add' x y,
--- -- rw ←linear_map.to_fun_eq_coe,
---  change (∑ (α : Φ), (h.coroot α x) • h.coroot α) y = _,
---  simp only [linear_map.coe_fn_sum, fintype.sum_apply, linear_map.smul_apply],
--- --  rw finset.sum_apply,
--- --  rw [← to_dual_2.to_fun],
--- end
-
--- lemma finsum_apply {α : Type*} {M : Type*} [add_comm_monoid M] (f : α → M) (a : α) (hf : (support f).finite)
--- : (∑ᶠ c : α, f c) a = (∑ c in hf.to_finite, f c a) :=
-
--- lemma finsum_apply' {α : Type*} {β : α → Type*} {γ} [∀a, comm_monoid (β a)]
--- (a : α) (g : γ → Πa, β a) (hg : (support f).finite) :
-
--- lemma finsum_apply_2 {α : Type*} {β : α → Type*} {γ : Type*} {M : Type*} [Π (a : α), add_comm_monoid (β a)]
--- [add_comm_monoid M] (a : α) (s : γ) (f : α → M) (hf : (support f).finite) (g : γ → Π (a : α), β a) :
--- (∑ᶠ c : α, f c) a = (∑ c in hf.to_finset, f c a) :=
-
-
-variables {β : Type*} {s : set β} [finite β]
--- instance sfinite [finite β] {s : set β} : finite s := subtype.finite
-example (M : Type*) [add_comm_monoid M] [f : s → M] (p : s):
-(∑ᶠ (α : s), f) p = ∑ᶠ (α : s), f p
-:=
-begin
-  have h1 : (support (λ (i : ↥s), f)).finite,
-  {
-    apply set.to_finite,
-  },
-  rw [finsum_eq_sum (λ (i : ↥s), f) h1],
-  have h2 : (support (λ (i : ↥s), f p)).finite,
-  {
-    apply set.to_finite,
-  },
-  rw [finsum_eq_sum (λ (i : ↥s), f p) h2],
-  simp only [finset.sum_apply],
-  congr',
-  sorry,
-end
-
-lemma to_dual_apply_apply_2 (x y : V) :
-h.to_dual x y = ∑ᶠ α, (h.coroot α x) • h.coroot α y :=
+lemma to_dual_apply_apply (x y : V) :
+  h.to_dual x y = ∑ᶠ α, (h.coroot α x) • h.coroot α y :=
 begin
  have := h.to_dual.map_add x y,
-
---  rw ←linear_map.to_fun_eq_coe,
---  change (∑ᶠ (α : Φ), (h.coroot α x) • h.coroot α) y = _,
---  simp only [algebra.id.smul_eq_mul],
  haveI h2 : finite Φ := finite_coe_iff.mpr h.finite,
  have h3 : (support (λ (α : ↥Φ), (h.coroot α) x • h.coroot α)).finite, by apply set.to_finite,
  change (∑ᶠ (α : Φ), (h.coroot α x) • h.coroot α) y = _,
  letI : fintype Φ := fintype.of_finite ↥Φ,
  rw finsum_eq_finset_sum_of_support_subset _ (_ : _ ⊆ ↑(finset.univ : finset Φ)),
  rw finsum_eq_finset_sum_of_support_subset _ (_ : _ ⊆ ↑(finset.univ : finset Φ)),
- {simp only [linear_map.coe_fn_sum, fintype.sum_apply, linear_map.smul_apply]},
- {simp only [finset.coe_univ, subset_univ]},
- {simp only [finset.coe_univ, support_subset_iff, mem_univ, implies_true_iff]},
+ { simp only [linear_map.coe_fn_sum, fintype.sum_apply, linear_map.smul_apply], },
+ { simp only [finset.coe_univ, subset_univ], },
+ { simp only [finset.coe_univ, support_subset_iff, mem_univ, implies_true_iff], },
 end
 
 /-- The bilinear map on `V` induced by a root system. -/
 def to_bilinear_map : V →ₗ[k] V →ₗ[k] k :=
 { to_fun := λ x, h.to_dual x,
   map_add' := λ x y, by { ext, simp only [map_add], },
-  map_smul' := λ c x, by { ext, simp only [linear_map.map_smulₛₗ], }
-}
+  map_smul' := λ c x, by { ext, simp only [linear_map.map_smulₛₗ], } }
 
 /-- The bilinear form on `V` induced by a root system. -/
 def to_bilin_form : bilin_form k V := h.to_bilinear_map.to_bilin
@@ -526,30 +357,6 @@ begin
     -- { exact h.coroot_apply_mem_zmultiples_2 β x },
     -- { exact h.coroot_apply_mem_zmultiples_2 β α }, },
 end
-
-
-
-
-example (P Q : Prop) (hP : P) (hQ : Q) : P ∧ Q :=
-⟨hP, hQ⟩
-
-
-example : set ℕ := {x : ℕ | x ^ 2 = 4 }
-example : Type := {x : ℕ // x ^ 2 = 4}
-
--- example : (0 : k) ≠ (1 : k) := by norm_num
--- example (x : k) : x ≠ x + 1 := begin
---   hint,
---   sorry
--- end
-
--- --Statement, allowed
--- def nottrueatall : Prop := 2 + 2 = 5
--- -- Proof that 2 + 2 = 5, not allowed
--- def foo  :nottrueatall :=
--- begin
---   unfold nottrueatall,
--- end
 
 omit h
 theorem foo {k : Type u_1} {V : Type u_2} (n m : ℤ)
@@ -617,35 +424,11 @@ begin
   simpa [← neg_inv],
 end
 
-lemma div {n : ℕ} (h : n ∣ 4) : n = 1 ∨ n = 2 ∨ n = 4 :=
-begin
-  have h₁ := nat.le_of_dvd four_pos h,
-  interval_cases n with h;
-  revert h;
-  dec_trivial,
-end
-
-lemma deduce_m {m : ℤ} (h : 4 * m = 4) : m = 1 :=
-begin
-  conv_rhs at h { rw ← mul_one (4 : ℤ), },
-  have h_pos : 0 < (4 : ℤ) := by positivity,
-  exact mul_left_cancel₀ h_pos.ne' h,
-end
-
-lemma deduce_m_neg {m : ℤ} (h : (-4) * m = 4) : m = -1 :=
-begin
-  conv_rhs at h { rw [ ← mul_one (4 : ℤ), ← neg_mul_neg], },
-  have h_pos : (-4 : ℤ) < 0 := by norm_num,
-  exact mul_left_cancel₀ h_pos.ne h,
-end
-
 lemma is_reduced_iff (h : is_root_system k Φ) :
   is_reduced_root_system k Φ ↔ ∀ (α ∈ Φ) (t : k), t • α ∈ Φ → t = 1 ∨ t = -1 :=
 begin
-  split,
---  refine ⟨λ hr x hx t ht, _, λ hr, ⟨h, λ α hα contra, _⟩⟩,
-  { intros hr x hx t ht,
-    let α : Φ := ⟨x, hx⟩,
+  refine ⟨λ hr x hx t ht, _, λ hr, ⟨h, λ α hα contra, _⟩⟩,
+  { let α : Φ := ⟨x, hx⟩,
     let β : Φ := ⟨t • x, ht⟩,
     have ht₀ : t ≠ 0, { have := h.zero_not_mem, contrapose! this, rwa [this, zero_smul] at ht, },
     have hαβ : t⁻¹ • (β : V) = α,
@@ -677,18 +460,9 @@ begin
       rwa [← htn, neg_smul] at ht, },
     -- Similarly `m ≠ ± 1`. Using `hmn : n * m = 4` this means `n`, `m` both `± 2`, thus `t = ± 1`.
     have hm1 : m ≠ 1,
-    { exact foo n m hr x hx t ht ht₀ htn htm hmn hn1 hnm1 hαβ hn hm,
-    },
+    { exact foo n m hr x hx t ht ht₀ htn htm hmn hn1 hnm1 hαβ hn hm, },
     have hmn1 : m ≠ -1,
-    {
-      exact m_not_neg_1 n m h hr x hx t ht ht₀ htn htm hmn hn1 hnm1 hαβ hn hm,
-      -- have := hr.two_smul_not_mem (-β) (h.neg_mem β),
-      -- contrapose! this,
-      -- simp only [nsmul_eq_smul_cast k 2, nat.cast_two, subtype.coe_mk, smul_neg],
-      -- rw [this, int.cast_neg, algebra_map.coe_one, mul_neg, mul_one, neg_eq_iff_neg_eq, eq_inv_iff_eq_inv] at htm,
-      -- rw htm,
-      -- simpa [← neg_inv],
-    },
+    { exact m_not_neg_1 n m h hr x hx t ht ht₀ htn htm hmn hn1 hnm1 hαβ hn hm, },
     suffices : n = 2 ∨ n = -2,
     { rcases this with rfl | rfl,
       { left,
@@ -703,51 +477,30 @@ begin
       { left, rw [h, this, nat.cast_two], },
       { right, rw [h, this, nat.cast_two], }, },
     have hn4 : n ≠ 4,
-    {
-      by_contra,
-      rw h at hmn,
-      replace hmn := deduce_m hmn,
-      contradiction,
-    },
+    { contrapose! hmn1,
+      simpa [hmn1, mul_right_eq_self₀] using hmn, },
     have hnm4 : n ≠ -4,
-    {
-      by_contra,
-      rw h at hmn,
-      replace hmn := deduce_m_neg hmn,
-      contradiction,
-    },
+    { contrapose! hmn1,
+      refine eq_neg_of_eq_neg (eq_comm.mp _),
+      simpa [hmn1, mul_right_eq_self₀, ← mul_neg] using hmn, },
     replace hmn := congr_arg int.nat_abs hmn,
     rw [int.nat_abs_mul, (by norm_num : (4 : ℤ).nat_abs = 4)] at hmn,
     replace hmn : n.nat_abs ∣ 4 := ⟨m.nat_abs, hmn.symm⟩,
-    rcases div hmn with h | h | h,
-    {
-      exfalso,
+    rcases nat.eq_one_or_two_or_four_of_div_four hmn with h | h | h,
+    { exfalso,
       cases int.nat_abs_eq n,
-      {rw [h, nat.cast_one] at h_1,
-      --  rw nat.cast_one at h_1,
+      { rw [h, nat.cast_one] at h_1,
        exact hn1 h_1, },
       { rw [h, nat.cast_one] at h_1,
-        -- rw nat.cast_one at h_1,
-        contradiction, },
-    },
-    {
-      assumption, },
-    {
-      cases int.nat_abs_eq n,
+        contradiction, }, },
+    { assumption, },
+    { cases int.nat_abs_eq n,
       exfalso,
-      {
-       rw h at h_1,
-       norm_cast at h_1, },
-      {
-       rw h at h_1,
-       norm_cast at h_1, },
-     },
-      },
-  { -- λ hr, ⟨h, λ α hα contra, _⟩
-    intro hr,
-    refine ⟨h, _⟩,
-    intros α hα contra,
-    replace contra : (2 : k) • α ∈ Φ, { rwa [nsmul_eq_smul_cast k 2 α, nat.cast_two] at contra, },
+      { rw h at h_1,
+        norm_cast at h_1, },
+      { rw h at h_1,
+        norm_cast at h_1, }, }, },
+  { replace contra : (2 : k) • α ∈ Φ, { rwa [nsmul_eq_smul_cast k 2 α, nat.cast_two] at contra, },
     have h2 := hr α hα (2 : k) contra,
     norm_num at h2, },
 end
@@ -758,7 +511,6 @@ section linear_ordered_field
 variables {k V : Type*} [linear_ordered_field k] [add_comm_group V] [module k V]
 -- This is where theorems about bases go-
 end linear_ordered_field
-
 
 end is_root_system
 
