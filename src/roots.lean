@@ -110,6 +110,10 @@ def coroot (α : Φ) : module.dual k V := classical.some $ h.exists_dual _ α.pr
   h.coroot α α = 2 :=
 (classical.some_spec (h.exists_dual _ α.property)).1
 
+@[simp] lemma coroot_to_pre_symmetry_subset (α : Φ) :
+  module.to_pre_symmetry (α : V) (h.coroot α) '' Φ ⊆ Φ :=
+(classical.some_spec (h.exists_dual _ α.property)).2
+
 /-- The symmetry associated to a root. -/
 def symmetry_of_root (α : Φ) : units (module.End k V) :=
 module.to_symmetry $ h.coroot_apply_self_eq_two α
@@ -121,16 +125,16 @@ module.to_pre_symmetry_apply_self $ h.coroot_apply_self_eq_two α
 lemma symmetry_of_root_sq (α : Φ) : (h.symmetry_of_root α)^2 = 1 :=
 units.ext $ module.to_pre_symmetry_sq $ coroot_apply_self_eq_two h α
 
+lemma finite_dimensional : finite_dimensional k V :=
+⟨⟨h.finite.to_finset, by simpa only [finite.coe_to_finset] using h.span_eq_top⟩⟩
+
 /-- A root system in `V` naturally determines another root system in the dual `V^*`. -/
 lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
-{ finite :=
-  begin
-    sorry,
-  end,
+{ finite := @finite_range _ _ _ $ finite_coe_iff.mpr h.finite,
   span_eq_top :=
   begin
-    refine eq_top_iff.mpr (λ x hx, _),
-  sorry,
+    refine eq_top_iff.mpr (λ f hf, _),
+    sorry,
   end,
   exists_dual :=
   begin
