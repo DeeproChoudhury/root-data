@@ -66,6 +66,19 @@ end
 def to_symmetry {x : V} {f : dual k V} (h : f x = 2) : units (End k V) :=
 ⟨to_pre_symmetry x f, to_pre_symmetry x f, to_pre_symmetry_sq h, to_pre_symmetry_sq h⟩
 
+lemma eq_dual_of_to_pre_symmetry_image_subseteq
+  {k V : Type*} [field k] [add_comm_group V] [module k V]
+  {Φ : set V} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤)
+  (x : V)
+  {f g : dual k V} (hf₁ : f x = 2) (hf₂ : to_pre_symmetry x f '' Φ ⊆ Φ)
+                   (hg₁ : g x = 2) (hg₂ : to_pre_symmetry x g '' Φ ⊆ Φ) :
+  f = g :=
+begin
+  let s := to_symmetry hf₁,
+  let s':= to_symmetry hg₁, -- Serre's lemma page 25
+  sorry,
+end
+
 end module
 
 section root_systems
@@ -103,7 +116,7 @@ include h
 
 /-- The coroot of a root.
 
-Note that although this uses `classical.some`, the choice is unique (TODO Formalise this). -/
+Note that although this uses `classical.some`, the choice is unique (see Serre's lemma). -/
 def coroot (α : Φ) : module.dual k V := classical.some $ h.exists_dual _ α.property
 
 @[simp] lemma coroot_apply_self_eq_two (α : Φ) :
@@ -125,29 +138,119 @@ module.to_pre_symmetry_apply_self $ h.coroot_apply_self_eq_two α
 lemma symmetry_of_root_sq (α : Φ) : (h.symmetry_of_root α)^2 = 1 :=
 units.ext $ module.to_pre_symmetry_sq $ coroot_apply_self_eq_two h α
 
-lemma finite_dimensional : finite_dimensional k V :=
+protected lemma finite_dimensional : finite_dimensional k V :=
 ⟨⟨h.finite.to_finset, by simpa only [finite.coe_to_finset] using h.span_eq_top⟩⟩
 
-/-- A root system in `V` naturally determines another root system in the dual `V^*`. -/
-lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
-{ finite := @finite_range _ _ _ $ finite_coe_iff.mpr h.finite,
-  span_eq_top :=
-  begin
-    refine eq_top_iff.mpr (λ f hf, _),
-    sorry,
-  end,
-  exists_dual :=
-  begin
-    sorry,
-  end,
-  subset_zmultiples :=
-  begin
-    sorry,
-  end, }
+.
+
+
+-- ∀ β ∈ (range h.coroot), ∃ f : module.dual k (module.dual k V),
+--   f β = 2 ∧ module.to_pre_symmetry β f ' (range h.coroot) ⊆ (range h.coroot):=
+-- begin
+--   intros x hx,
+--   have := hx.some_spec,
+--   -- rintros _ ⟨α, rfl⟩,
+--   -- use module.dual.eval k V α,
+--   -- rw module.dual.eval_apply,
+--   -- split,
+--   -- {  },
+--   -- sorry,
+-- end
+
+lemma is_root_system.finite_dimensional : finite_dimensional k V :=
+begin
+  have := finite_dimensional.span_of_finite k h.finite,
+  rw h.span_eq_top at this,
+  resetI,
+  refine finite_dimensional.of_injective (⟨λ v, ⟨v, ⟨⟩⟩, λ _ _, rfl, λ _ _, rfl⟩ :
+    V →ₗ[k] (⊤ : submodule k V)) _,
+  intros x y hxy,
+  dsimp at hxy,
+  rwa subtype.ext_iff_val at hxy,
+end
 
 @[simp] lemma symmetry_of_root_image_subset (α : Φ) :
   h.symmetry_of_root α '' Φ ⊆ Φ :=
 (classical.some_spec (h.exists_dual _ α.property)).2
+
+@[simp] lemma symmetry_of_root_apply_mem (α β : Φ) : h.symmetry_of_root α β ∈ Φ :=
+begin
+  apply h.symmetry_of_root_image_subset α,
+  simp only [mem_image],
+  exact ⟨ β, β.property, rfl⟩,
+end
+
+@[simp] lemma coroot_symmetry_apply_eq (α β : Φ) (h'):
+h.coroot ⟨h.symmetry_of_root α β, h'⟩ = h.coroot β - h.coroot β α • h.coroot α :=
+begin
+  set γ : Φ := ⟨h.symmetry_of_root α β, h'⟩,
+  apply module.eq_dual_of_to_pre_symmetry_image_subseteq h.finite h.span_eq_top γ,
+  {
+    exact h.coroot_apply_self_eq_two γ,
+  },
+  { simp only [subtype.coe_mk, module.to_pre_symmetry_apply, image_subset_iff],
+    intros δ hδ,
+    simp only [mem_preimage],
+    change δ - h.coroot γ δ • γ ∈ Φ,
+    -- change h.symmetry_of_root γ δ ∈ Φ,
+    let δ' : Φ := ⟨δ, hδ⟩,
+    convert h.symmetry_of_root_apply_mem γ δ',
+    simp only [subtype.coe_mk, dual_tensor_hom_apply],
+  },
+  {sorry},
+  {
+    simp only [subtype.coe_mk, module.to_pre_symmetry_apply, image_subset_iff],
+    intros δ hδ,
+    simp only [mem_preimage],
+    sorry
+  },
+end
+
+
+/-- A root system in `V` naturally determines another root system in the dual `V^*`. -/
+lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
+{ finite := @set.finite_range _ _ h.coroot (finite_coe_iff.mpr h.finite),
+    -- have inj : function.injective (λ h, classical.some h.2 : range h.coroot → Φ),
+    -- { intros x y hxy,
+    --   ext v,
+    --   dsimp at hxy,
+    --   generalize_proofs h1 h2 at hxy,
+    --   rw [←subtype.val_eq_coe, ←h1.some_spec, ←subtype.val_eq_coe, ←h2.some_spec],
+    --   congr,
+    --   exact hxy, },
+    -- suffices : finite (range h.coroot),
+    -- { exact finite_coe_iff.mp this, },
+    -- haveI : finite Φ := finite_coe_iff.mpr h.finite,
+    -- exact set.finite_range h.coroot,
+
+  span_eq_top := begin
+    rw eq_top_iff,
+    intros x hx,
+    obtain ⟨α, rfl⟩ := hx,
+    -- haveI : finite_dimensional k V := h.finite_dimensional,
+    -- set v := (basis.to_dual_equiv (basis.of_vector_space k V)).symm x with v_eq,
+
+
+
+
+  sorry,
+  end,
+  exists_dual := begin
+  -- what we know about x is that it's a coroot
+  rintros x ⟨α, rfl⟩,
+  refine ⟨module.dual.eval k V α, _, _⟩,
+  { simp only [module.dual.eval_apply, coroot_apply_self_eq_two], },
+  { simp only [module.to_pre_symmetry_apply, module.dual.eval_apply, image_subset_iff],
+    rintros y ⟨β, rfl⟩,
+    simp only [mem_preimage, mem_range, set_coe.exists],
+    -- ∃ (x : V) (h_1 : x ∈ Φ), h.coroot ⟨x, h_1⟩ = h.coroot β - ⇑(h.coroot β) ↑α • h.coroot α
+    exact ⟨h.symmetry_of_root α β, h.symmetry_of_root_apply_mem α β,
+      h.coroot_symmetry_apply_eq α β _⟩, },
+  end,
+  subset_zmultiples := begin sorry end, }
+
+
+
 
 @[simp] lemma neg_mem (α : Φ) : - (α : V) ∈ Φ :=
 begin
@@ -277,7 +380,7 @@ the Wyel group is a subgroup of the symmetry group
 subgroups closure induction-/
 
 /-- The linear map `V → V⋆` induced by a root system. -/
-def to_dual : V →ₗ[k] module.dual k V :=
+@[simps] def to_dual : V →ₗ[k] module.dual k V :=
 { to_fun := λ x, ∑ᶠ α, (h.coroot α x) • h.coroot α,
   map_add' := λ x y ,
   begin
@@ -303,6 +406,7 @@ def to_dual : V →ₗ[k] module.dual k V :=
 lemma to_dual_apply_apply (x y : V) :
   h.to_dual x y = ∑ᶠ α, (h.coroot α x) • h.coroot α y :=
 begin
+  simp,
  have := h.to_dual.map_add x y,
  haveI h2 : finite Φ := finite_coe_iff.mpr h.finite,
  have h3 : (support (λ (α : ↥Φ), (h.coroot α) x • h.coroot α)).finite, by apply set.to_finite,
