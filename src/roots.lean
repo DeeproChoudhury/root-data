@@ -77,6 +77,7 @@ end
 def to_symmetry {x : V} {f : dual k V} (h : f x = 2) : units (End k V) :=
 ⟨to_pre_symmetry x f, to_pre_symmetry x f, to_pre_symmetry_sq h, to_pre_symmetry_sq h⟩
 
+/-- Serre's uniqueness lemma from page 25 of "Complex semisimple Lie algebras". -/
 lemma eq_dual_of_to_pre_symmetry_image_subseteq
   {k V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
   {Φ : set V} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤)
@@ -85,8 +86,15 @@ lemma eq_dual_of_to_pre_symmetry_image_subseteq
                    (hg₁ : g x = 2) (hg₂ : to_pre_symmetry x g '' Φ ⊆ Φ) :
   f = g :=
 begin
+  have hx : x ≠ 0, { rintros rfl, simpa using hf₁, },
   let s := to_symmetry hf₁,
-  let s':= to_symmetry hg₁, -- Serre's lemma page 25
+  let s':= to_symmetry hg₁,
+  suffices : s = s',
+  { rw [units.ext_iff] at this,
+    ext v,
+    replace this : f v • x = g v • x,
+    { simpa [s, s', to_symmetry] using linear_map.congr_fun this v, },
+    exact smul_left_injective k hx this, },
   sorry,
 end
 
