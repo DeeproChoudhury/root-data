@@ -43,6 +43,10 @@ begin
   refl,
 end
 
+@[simp] lemma module.coe_End_one {k V : Type*} [semiring k] [add_comm_monoid V] [module k V] :
+  ⇑(1 : (module.End k V)ˣ) = id :=
+rfl
+
 namespace module
 
 variables {k V : Type*} [comm_ring k] [add_comm_group V] [module k V]
@@ -138,12 +142,14 @@ include h
 Note that although this uses `classical.some`, the choice is unique (see Serre's lemma). -/
 def coroot (α : Φ) : module.dual k V := classical.some $ h.exists_dual _ α.property
 
+local postfix `ᘁ`:100 := h.coroot -- TODO Use more widely
+
 @[simp] lemma coroot_apply_self_eq_two (α : Φ) :
   h.coroot α α = 2 :=
 (classical.some_spec (h.exists_dual _ α.property)).1
 
 @[simp] lemma coroot_to_pre_symmetry_subset (α : Φ) :
-  module.to_pre_symmetry (α : V) (h.coroot α) '' Φ ⊆ Φ :=
+  module.to_pre_symmetry (α : V) (αᘁ) '' Φ ⊆ Φ :=
 (classical.some_spec (h.exists_dual _ α.property)).2
 
 lemma zero_not_mem : (0 : V) ∉ Φ :=
@@ -153,53 +159,70 @@ lemma zero_not_mem : (0 : V) ∉ Φ :=
 def symmetry_of_root (α : Φ) : units (module.End k V) :=
 module.to_symmetry $ h.coroot_apply_self_eq_two α
 
+local notation `ട` := h.symmetry_of_root -- TODO Use more widely
+
+lemma symmetry_of_root_apply (α : Φ) (v : V) :
+  ട α v = v - αᘁ v • α :=
+module.to_pre_symmetry_apply (α : V) v (αᘁ)
+
 @[simp] lemma symmetry_of_root_apply_self_neg (α : Φ) :
-  h.symmetry_of_root α α = - α :=
+  ട α α = - α :=
 module.to_pre_symmetry_apply_self $ h.coroot_apply_self_eq_two α
 
-lemma symmetry_of_root_sq (α : Φ) : (h.symmetry_of_root α)^2 = 1 :=
+@[simp] lemma symmetry_of_root_sq (α : Φ) : (ട α)^2 = 1 :=
 units.ext $ module.to_pre_symmetry_sq $ coroot_apply_self_eq_two h α
 
 protected lemma finite_dimensional : finite_dimensional k V :=
 ⟨⟨h.finite.to_finset, by simpa only [finite.coe_to_finset] using h.span_eq_top⟩⟩
 
-lemma is_root_system.finite_dimensional : finite_dimensional k V :=
-begin
-  have := finite_dimensional.span_of_finite k h.finite,
-  rw h.span_eq_top at this,
-  resetI,
-  refine finite_dimensional.of_injective (⟨λ v, ⟨v, ⟨⟩⟩, λ _ _, rfl, λ _ _, rfl⟩ :
-    V →ₗ[k] (⊤ : submodule k V)) _,
-  intros x y hxy,
-  dsimp at hxy,
-  rwa subtype.ext_iff_val at hxy,
-end
-
-@[simp] lemma symmetry_of_root_image_subset (α : Φ) :
-  h.symmetry_of_root α '' Φ ⊆ Φ :=
+lemma symmetry_of_root_image_subset (α : Φ) :
+  ട α '' Φ ⊆ Φ :=
 (classical.some_spec (h.exists_dual _ α.property)).2
 
-@[simp] lemma symmetry_of_root_apply_mem (α β : Φ) : h.symmetry_of_root α β ∈ Φ :=
+@[simp] lemma symmetry_of_root_image_eq (α : Φ) :
+  ട α '' Φ = Φ :=
+begin
+  refine subset_antisymm (h.symmetry_of_root_image_subset α) _,
+  have : Φ = ((ട α) ∘ (ട α)) '' Φ, { change Φ = ⇑((ട α)^2) '' Φ, simp, },
+  conv_lhs { rw [this, image_comp], },
+  mono,
+  exact h.symmetry_of_root_image_subset α,
+end
+
+@[simp] lemma symmetry_of_root_apply_mem (α β : Φ) : ട α β ∈ Φ :=
 begin
   apply h.symmetry_of_root_image_subset α,
   simp only [mem_image],
   exact ⟨ β, β.property, rfl⟩,
 end
 
-@[simp] lemma coroot_symmetry_apply_eq (α β : Φ) (h'):
-h.coroot ⟨h.symmetry_of_root α β, h'⟩ = h.coroot β - h.coroot β α • h.coroot α :=
+@[simp] lemma coroot_symmetry_apply_eq (α β : Φ) (h') :
+  ⟨ട α β, h'⟩ᘁ = βᘁ - (βᘁ α) • αᘁ :=
 begin
-  set γ : Φ := ⟨h.symmetry_of_root α β, h'⟩,
+  set γ : Φ := ⟨ട α β, h'⟩,
+  have hγ : module.to_pre_symmetry (γ : V) (βᘁ - βᘁ α • αᘁ) = (ട α) * (ട β) * (ട α),
+  { ext v,
+    simp only [subtype.coe_mk, module.to_pre_symmetry_apply, linear_map.sub_apply,
+      linear_map.smul_apply, linear_map.mul_apply],
+    -- TODO It should be possibly to fold the `erw` into the `simp only` by sorting out simp-normal
+    -- form for various coercions.
+    erw [h.symmetry_of_root_apply, h.symmetry_of_root_apply, h.symmetry_of_root_apply,
+      h.symmetry_of_root_apply],
+    simp only [map_sub, linear_map.map_smulₛₗ, ring_hom.id_apply, algebra.id.smul_eq_mul,
+      coroot_apply_self_eq_two, smul_smul, mul_sub, sub_mul, sub_smul, smul_sub, mul_two, add_smul,
+    mul_comm (βᘁ α) (αᘁ v)],
+    abel, },
   apply module.eq_dual_of_to_pre_symmetry_image_subseteq h.finite h.span_eq_top γ,
   { exact h.coroot_apply_self_eq_two γ, },
   { exact h.coroot_to_pre_symmetry_subset γ, },
-  {sorry},
-  {
-    simp only [subtype.coe_mk, module.to_pre_symmetry_apply, image_subset_iff],
-    intros δ hδ,
-    simp only [mem_preimage],
-    sorry
-  },
+  { simp only [symmetry_of_root_apply, mul_sub, subtype.coe_mk, linear_map.sub_apply, map_sub,
+      coroot_apply_self_eq_two, linear_map.map_smulₛₗ, ring_hom.id_apply, algebra.id.smul_eq_mul,
+      linear_map.smul_apply],
+    ring, },
+  { rw hγ,
+    change ((ട α) ∘ (ട β) ∘ (ട α)) '' Φ ⊆ Φ,
+    rw ← comp.assoc,
+    simp only [image_comp, h.symmetry_of_root_image_eq], },
 end
 
 /-- A root system in `V` naturally determines another root system in the dual `V^*`. -/
@@ -219,13 +242,12 @@ lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
     simp only [module.to_pre_symmetry_apply, module.dual.eval_apply, image_subset_iff],
     rintros y ⟨β, rfl⟩,
     simp only [mem_preimage, mem_range, set_coe.exists],
-    exact ⟨h.symmetry_of_root α β, h.symmetry_of_root_apply_mem α β,
-      h.coroot_symmetry_apply_eq α β _⟩,
+    exact ⟨ട α β, h.symmetry_of_root_apply_mem α β, h.coroot_symmetry_apply_eq α β _⟩,
   end,
   subset_zmultiples :=
   begin
     rintros aux ⟨α, rfl⟩ α' ⟨h₁, h₂⟩ - ⟨-, ⟨β, rfl⟩, rfl⟩,
-    refine h.subset_zmultiples _ β.property (h.coroot β) ⟨_, _⟩ ⟨α, α.property, _⟩,
+    refine h.subset_zmultiples _ β.property (βᘁ) ⟨_, _⟩ ⟨α, α.property, _⟩,
     { simp, },
     { exact h.coroot_to_pre_symmetry_subset β, },
     { haveI := h.finite_dimensional,
@@ -234,7 +256,6 @@ lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
       sorry, },
   end, }
 
-
 @[simp] lemma neg_mem (α : Φ) : - (α : V) ∈ Φ :=
 begin
   have := (image_subset_iff.mp $ h.symmetry_of_root_image_subset α) α.property,
@@ -242,12 +263,12 @@ begin
 end
 
 @[simp] lemma coroot_image_subset_zmultiples (α : Φ) :
-  h.coroot α '' Φ ⊆ add_subgroup.zmultiples (1 : k) :=
+  αᘁ '' Φ ⊆ add_subgroup.zmultiples (1 : k) :=
 h.subset_zmultiples α α.property (h.coroot α)
   ⟨h.coroot_apply_self_eq_two α, h.symmetry_of_root_image_subset α⟩
 
 @[simp] lemma coroot_apply_mem_zmultiples (α β : Φ) :
-  h.coroot α β ∈ add_subgroup.zmultiples (1 : k) :=
+  αᘁ β ∈ add_subgroup.zmultiples (1 : k) :=
 begin
   have := (image_subset_iff.mp $ h.coroot_image_subset_zmultiples α) β.property,
   simpa using this,
