@@ -248,11 +248,16 @@ lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
   begin
     rintros aux ⟨α, rfl⟩ α' ⟨h₁, h₂⟩ - ⟨-, ⟨β, rfl⟩, rfl⟩,
     refine h.subset_zmultiples _ β.property (βᘁ) ⟨_, _⟩ ⟨α, α.property, _⟩,
-    { simp, },
+    { simp only [subtype.val_eq_coe, coroot_apply_self_eq_two], },
     { exact h.coroot_to_pre_symmetry_subset β, },
     { haveI := h.finite_dimensional,
       suffices : (α : V) = (module.eval_equiv k V).symm α', { simp [this], },
       rw linear_equiv.eq_symm_apply,
+      unfold module.eval_equiv,
+      ext z,
+      rw [linear_equiv.of_bijective_apply, module.dual.eval_apply],
+
+
       sorry, },
   end, }
 
