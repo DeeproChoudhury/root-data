@@ -110,15 +110,13 @@ begin
 end
 
 /-- Serre's uniqueness lemma from page 25 of "Complex semisimple Lie algebras". -/
-lemma eq_dual_of_to_pre_symmetry_image_subseteq
-  {k V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
+lemma eq_dual_of_to_pre_symmetry_image_subseteq [char_zero k] [no_zero_smul_divisors k V]
+  {x : V} (hx : x ≠ 0)
   {Φ : set V} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤)
-  (x : V)
   {f g : dual k V} (hf₁ : f x = 2) (hf₂ : to_pre_symmetry x f '' Φ ⊆ Φ)
                    (hg₁ : g x = 2) (hg₂ : to_pre_symmetry x g '' Φ ⊆ Φ) :
   f = g :=
 begin
-  have hx : x ≠ 0, { rintros rfl, simpa using hf₁, },
   let u := to_symmetry hg₁ * to_symmetry hf₁,
   suffices : is_of_fin_order u,
   { have hu : ↑u = linear_map.id + dual_tensor_hom k V V ((f - g) ⊗ₜ x),
@@ -191,7 +189,7 @@ def coroot (α : Φ) : module.dual k V := classical.some $ h.exists_dual _ α.pr
 local postfix `ᘁ`:100 := h.coroot -- TODO Use more widely
 
 @[simp] lemma coroot_apply_self_eq_two (α : Φ) :
-  h.coroot α α = 2 :=
+  αᘁ α = 2 :=
 (classical.some_spec (h.exists_dual _ α.property)).1
 
 @[simp] lemma coroot_to_pre_symmetry_subset (α : Φ) :
@@ -258,7 +256,8 @@ begin
       coroot_apply_self_eq_two, smul_smul, mul_sub, sub_mul, sub_smul, smul_sub, mul_two, add_smul,
     mul_comm (βᘁ α) (αᘁ v)],
     abel, },
-  apply module.eq_dual_of_to_pre_symmetry_image_subseteq h.finite h.span_eq_top γ,
+  have hγ₀ : (γ : V) ≠ 0, { intros contra, apply h.zero_not_mem, rw ← contra, exact γ.property, },
+  apply module.eq_dual_of_to_pre_symmetry_image_subseteq hγ₀ h.finite h.span_eq_top,
   { exact h.coroot_apply_self_eq_two γ, },
   { exact h.coroot_to_pre_symmetry_subset γ, },
   { simp only [symmetry_of_root_apply, mul_sub, subtype.coe_mk, linear_map.sub_apply, map_sub,
@@ -315,7 +314,7 @@ end
 
 @[simp] lemma coroot_image_subset_zmultiples (α : Φ) :
   αᘁ '' Φ ⊆ add_subgroup.zmultiples (1 : k) :=
-h.subset_zmultiples α α.property (h.coroot α)
+h.subset_zmultiples α α.property (αᘁ)
   ⟨h.coroot_apply_self_eq_two α, h.symmetry_of_root_image_subset α⟩
 
 @[simp] lemma coroot_apply_mem_zmultiples (α β : Φ) :
@@ -326,7 +325,7 @@ begin
 end
 
 @[simp] lemma coroot_apply_mem_zmultiples_2 (α β : Φ) :
-  ∃ a : ℤ, h.coroot α β = a :=
+  ∃ a : ℤ, αᘁ β = a :=
 begin
   have hr := h.coroot_apply_mem_zmultiples α β,
   rw add_subgroup.mem_zmultiples_iff at hr,
@@ -336,7 +335,7 @@ begin
 end
 
 lemma exists_int_coroot_apply_eq (α β : Φ) :
-  ∃ (n : ℤ), h.coroot α β = n :=
+  ∃ (n : ℤ), αᘁ β = n :=
 begin
   obtain ⟨n, hn⟩ := add_subgroup.mem_zmultiples_iff.mp (h.coroot_apply_mem_zmultiples α β),
   rw ← hn,
@@ -433,7 +432,7 @@ subgroups closure induction-/
 
 /-- The linear map `V → V⋆` induced by a root system. -/
 @[simps] def to_dual : V →ₗ[k] module.dual k V :=
-{ to_fun := λ x, ∑ᶠ α, (h.coroot α x) • h.coroot α,
+{ to_fun := λ x, ∑ᶠ α, αᘁ x • αᘁ,
   map_add' := λ x y ,
   begin
     ext,
@@ -456,11 +455,11 @@ subgroups closure induction-/
   end }
 
 lemma to_dual_apply_apply (x y : V) :
-  h.to_dual x y = ∑ᶠ α, (h.coroot α x) • h.coroot α y :=
+  h.to_dual x y = ∑ᶠ α, αᘁ x • αᘁ y :=
 begin
  haveI h2 : finite Φ := finite_coe_iff.mpr h.finite,
- have h3 : (support (λ (α : ↥Φ), (h.coroot α) x • h.coroot α)).finite, by apply set.to_finite,
- change (∑ᶠ (α : Φ), (h.coroot α x) • h.coroot α) y = _,
+ have h3 : (support (λ (α : ↥Φ), (αᘁ) x • αᘁ)).finite, by apply set.to_finite,
+ change (∑ᶠ (α : Φ), (αᘁ x) • αᘁ) y = _,
  letI : fintype Φ := fintype.of_finite ↥Φ,
  rw finsum_eq_finset_sum_of_support_subset _ (_ : _ ⊆ ↑(finset.univ : finset Φ)),
  rw finsum_eq_finset_sum_of_support_subset _ (_ : _ ⊆ ↑(finset.univ : finset Φ)),
@@ -493,7 +492,7 @@ end
 
 -- Estimate high effort.
 lemma to_bilin_form_orthogonal_eq_ker (α : Φ) :
-  h.to_bilin_form.orthogonal (k ∙ (α : V)) = (h.coroot α).ker :=
+  h.to_bilin_form.orthogonal (k ∙ (α : V)) = (αᘁ).ker :=
 begin
   apply le_antisymm,
   { intros x hx,
@@ -593,11 +592,11 @@ begin
     { rw [subtype.coe_mk, subtype.coe_mk, smul_smul, inv_mul_cancel ht₀, one_smul], },
     obtain ⟨n, hn⟩ := h.exists_int_coroot_apply_eq β α,
     have htn : t * n = 2,
-    { have : h.coroot β (t • α) = 2 := h.coroot_apply_self_eq_two β,
+    { have : βᘁ (t • α) = 2 := h.coroot_apply_self_eq_two β,
       simpa only [linear_map.map_smulₛₗ, ring_hom.id_apply, algebra.id.smul_eq_mul, hn] using this },
     obtain ⟨m, hm⟩ := h.exists_int_coroot_apply_eq α β,
     have htm : t⁻¹ * m = 2,
-    { have : h.coroot α (t⁻¹ • β) = 2, { rw hαβ, exact h.coroot_apply_self_eq_two α, },
+    { have : αᘁ (t⁻¹ • β) = 2, { rw hαβ, exact h.coroot_apply_self_eq_two α, },
       simpa only [linear_map.map_smulₛₗ, ring_hom.id_apply, algebra.id.smul_eq_mul, hm] using this },
     have hmn : n * m = 4,
     { have := congr_arg2 ((*) : k → k → k) htn htm,
