@@ -1,8 +1,6 @@
-import linear_algebra.dual
 import linear_algebra.contraction
 import linear_algebra.bilinear_form
-import data.sign
-import tactic.default
+import group_theory.order_of_element
 
 noncomputable theory
 
@@ -81,6 +79,36 @@ end
 def to_symmetry {x : V} {f : dual k V} (h : f x = 2) : units (End k V) :=
 ⟨to_pre_symmetry x f, to_pre_symmetry x f, to_pre_symmetry_sq h, to_pre_symmetry_sq h⟩
 
+@[simp] lemma to_symmetry_inv {x : V} {f : dual k V} (h : f x = 2) :
+  (to_symmetry h)⁻¹ = to_symmetry h :=
+begin
+  rw [← mul_left_inj (to_symmetry h), mul_left_inv, ← sq, eq_comm, units.ext_iff],
+  exact to_pre_symmetry_sq h,
+end
+
+@[simp] lemma eq_zero_or_zero_of_dual_tensor_hom_tmul_eq_zero
+  {f : dual k V} {x : V} [no_zero_smul_divisors k V] :
+  dual_tensor_hom k V V (f ⊗ₜ x) = 0 ↔ f = 0 ∨ x = 0  :=
+begin
+  refine ⟨λ h, _, λ h, _⟩,
+  { rcases eq_or_ne x 0 with rfl | hx, { simp, },
+    left,
+    ext v,
+    simp only [linear_map.zero_apply],
+    replace h : f v • x = 0 :=
+      by simpa only [dual_tensor_hom_apply, linear_map.zero_apply] using linear_map.congr_fun h v,
+    rw smul_eq_zero at h,
+    tauto, },
+  { rcases h with rfl | rfl; simp, },
+end
+
+lemma unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq
+  {Φ : set V} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤)
+  {u : (End k V)ˣ} (hu : u '' Φ ⊆ Φ) : is_of_fin_order u :=
+begin
+  sorry,
+end
+
 /-- Serre's uniqueness lemma from page 25 of "Complex semisimple Lie algebras". -/
 lemma eq_dual_of_to_pre_symmetry_image_subseteq
   {k V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
@@ -91,15 +119,33 @@ lemma eq_dual_of_to_pre_symmetry_image_subseteq
   f = g :=
 begin
   have hx : x ≠ 0, { rintros rfl, simpa using hf₁, },
-  let s := to_symmetry hf₁,
-  let s':= to_symmetry hg₁,
-  suffices : s = s',
-  { rw [units.ext_iff] at this,
-    ext v,
-    replace this : f v • x = g v • x,
-    { simpa [s, s', to_symmetry] using linear_map.congr_fun this v, },
-    exact smul_left_injective k hx this, },
-  sorry,
+  let u := to_symmetry hg₁ * to_symmetry hf₁,
+  suffices : is_of_fin_order u,
+  { have hu : ↑u = linear_map.id + dual_tensor_hom k V V ((f - g) ⊗ₜ x),
+    { ext y,
+      simp only [to_symmetry, hg₁, units.coe_mul, units.coe_mk, linear_map.mul_apply, id.def,
+        to_pre_symmetry_apply, map_sub, linear_map.map_smulₛₗ, ring_hom.id_apply, sub_smul, two_smul,
+        linear_map.add_apply, linear_map.id_coe, dual_tensor_hom_apply, linear_map.sub_apply,
+        sub_add_cancel', smul_neg, sub_neg_eq_add],
+      abel, },
+    replace hu : ∀ (n : ℕ), ↑(u^n) = linear_map.id + (n : k) • dual_tensor_hom k V V ((f - g) ⊗ₜ x),
+    { intros n,
+      induction n with n ih, { simpa, },
+      have aux : (dual_tensor_hom k V V ((f - g) ⊗ₜ[k] x)).comp
+        ((n : k) • dual_tensor_hom k V V ((f - g) ⊗ₜ[k] x)) = 0, { ext v, simp [hf₁, hg₁], },
+      rw [pow_succ, units.coe_mul, ih, hu, add_mul, mul_add, mul_add],
+      simp only [linear_map.mul_eq_comp, linear_map.id_comp, linear_map.comp_id, nat.cast_succ,
+        aux, add_zero, add_smul, one_smul, add_assoc], },
+    obtain ⟨n, hn₀, hn₁⟩ := (is_of_fin_order_iff_pow_eq_one u).mp this,
+    specialize hu n,
+    replace hn₁ : ↑(u ^ n) = linear_map.id := units.ext_iff.mp hn₁,
+    simpa only [hn₁, smul_eq_zero, nat.cast_eq_zero, hn₀.ne', false_or, or_false, hx,
+      eq_zero_or_zero_of_dual_tensor_hom_tmul_eq_zero, sub_eq_zero, self_eq_add_right] using hu, },
+  suffices : u '' Φ ⊆ Φ,
+  { exact unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq hΦ₁ hΦ₂ this, },
+  change (to_pre_symmetry x g ∘ to_pre_symmetry x f '' Φ) ⊆ Φ,
+  rw [image_comp],
+  exact (monotone_image hf₂).trans hg₂,
 end
 
 end module
