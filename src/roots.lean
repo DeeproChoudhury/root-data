@@ -315,7 +315,6 @@ lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
       -- ext z,
       -- rw [linear_equiv.of_bijective_apply, module.dual.eval_apply],
       have hα : h.coroot α ≠ 0, {
-
         sorry,
       },
       apply module.eq_dual_of_to_pre_symmetry_image_subseteq (hα) h.finite_coroots h.coroot_span_eq_top,
@@ -328,6 +327,7 @@ lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
         simp only [mem_range, set_coe.exists],
         use α.val,
         simp only [subtype.val_eq_coe, coroot_apply_self_eq_two],
+
 
 
 
