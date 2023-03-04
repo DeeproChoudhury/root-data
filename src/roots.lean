@@ -315,7 +315,9 @@ lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
       -- ext z,
       -- rw [linear_equiv.of_bijective_apply, module.dual.eval_apply],
       have hα : h.coroot α ≠ 0, {
-        sorry,
+        intro h,
+        simp only [h, linear_map.map_zero] at h₁,
+        norm_num at h₁,
       },
       apply module.eq_dual_of_to_pre_symmetry_image_subseteq (hα) h.finite_coroots h.coroot_span_eq_top,
       {
