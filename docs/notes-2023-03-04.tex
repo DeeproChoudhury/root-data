@@ -1,0 +1,107 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage{url, amsmath, amsthm, amsfonts, enumerate}
+
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{definition}[lemma]{Definition}
+
+\title{A coroot calculation}
+% \author{Oliver Nash}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+  An informal account of the proof of the lemma\\
+  \texttt{is\_root\_system.coroot\_symmetry\_apply\_eq}.
+\end{abstract}
+
+\section{The coroot of the reflection of a root}
+
+Recall our definition of the (pre)symmetry associated to a pair:
+\begin{definition}
+  Let $k$ be a field of characteristic zero and $V$ a vector space over $k$. Given a vector
+  $x \in V$ and a linear form $f \in V^*$ the \textbf{pre-symmetry} associated to the pair $(x, f)$
+  is the linear endomorphism of $V$:
+  \begin{align*}
+    s_{x,f} : y \mapsto y - f(y)x.
+  \end{align*}
+  If the condition $f(x) = 2$
+  holds then $s_{x,f}$ is invertible, satisfies $s_{x,f}^{-1} = s_{x,f}$, and we call it a
+  \textbf{symmetry}.
+\end{definition}
+
+Recall the uniqueness lemma:
+\begin{lemma}\label{lem:uniqueness}
+  Let $k$ be a field of characteristic zero, $V$ a vector space over $k$, and $\Phi \subseteq V$
+  a finite subset which spans $V$. Given a vector $x \in V$ and two linear forms $f, g \in V^*$
+  such that:
+  \begin{itemize}
+    \item $f(x) = 2$ and $s_{x, f}(\Phi) \subseteq \Phi$,
+    \item $g(x) = 2$ and $s_{x, g}(\Phi) \subseteq \Phi$,
+  \end{itemize}
+  then $f = g$.
+\end{lemma}
+
+Recall the definition of a root system:
+\begin{definition}
+  Let $k$ be a field of characteristic zero, $V$ and vector space over $k$, and
+  $\Phi \subseteq V$. Then we say $\Phi$ is a \textbf{root system} for $V$ over $k$ if:
+  \begin{itemize}
+    \item $\Phi$ is finite,
+    \item $\Phi$ spans $V$,
+    \item for all $\alpha \in \Phi$, there exists $f \in V^*$ such that $f(x) = 2$ and
+    $s_{x, f}(\Phi) \subseteq \Phi$,
+    \item for all $\alpha \in \Phi$ and $f \in V^*$ such that $f(x) = 2$ and
+    $s_{x, f}(\Phi) \subseteq \Phi$, we have $f(\Phi) \subseteq \mathbb{Z} \subseteq k$.
+  \end{itemize}
+  We call the elements of $\alpha \in \Phi$ \textbf{roots}.
+\end{definition}
+
+Recall the definition of the coroot and symmetry of a root:
+\begin{definition}
+  Let $\Phi$ be a root system for $V$ over $k$ and let $\alpha \in \Phi$ be a root. We define the
+  \textbf{coroot} $\alpha^* \in V^*$ to be the unique linear form such that:
+  \begin{itemize}
+    \item $\alpha^*(\alpha) = 2$,
+    \item $s_{\alpha, \alpha^*}(\Phi) \subseteq \Phi$.
+  \end{itemize}
+  We emphasise that uniqueness follows from lemma \ref{lem:uniqueness}. Furthermore we write:
+  \begin{align*}
+    s_\alpha = s_{\alpha, \alpha^*},
+  \end{align*}
+  and speak of the \textbf{symmetry} of a root.
+\end{definition}
+
+Now if $\alpha$ and $\beta$ are two roots of some root system then $s_\alpha(\beta) \in \Phi$
+is another root and thus has a coroot $(s_\alpha(\beta))^*$. In order to show that the set of
+coroots form a root system in $V^*$ we need to calculate this coroot in terms of the coroots
+$\alpha^*$ and $\beta^*$. The following lemma gives the answer:
+\begin{lemma}[\texttt{is\_root\_system.coroot\_symmetry\_apply\_eq}]
+  Let $\Phi$ be a root system for $V$ over $k$ and let $\alpha, \beta \in \Phi$ be a roots, then:
+  \begin{align*}
+    (s_\alpha(\beta))^* = \beta^* - (\beta^*(\alpha))\alpha^*.
+  \end{align*}
+\end{lemma}
+\begin{proof}
+  Let $\gamma = s_\alpha(\beta)$ and $g = \beta^* - (\beta^*(\alpha))\alpha^*$.
+  By the uniqueness lemma \ref{lem:uniqueness} it is sufficient to show that:
+  \begin{enumerate}[(i)]
+    \item $g(\gamma) = 2$\label{step_1},
+    \item $s_{\gamma, g}(\Phi) \subseteq \Phi$\label{step_2}.
+  \end{enumerate}
+  We did the proof of \eqref{step_1} together on Wednesday: you just unfold all definitions,
+  expand brackets, and use $\alpha^*(\alpha) = \beta^*(\beta) = 2$.
+
+  To prove \eqref{step_2}, since $s_\alpha$ and $s_\beta$ both preserve $\Phi$, it is sufficient to
+  show that:
+  \begin{align*}
+    s_{\gamma, g} = s_\alpha \circ s_\beta \circ s_\alpha .
+  \end{align*}
+  To prove this we just pick any vector $v \in V$ and unfold the left and right hand sides applied
+  to $v$ and observe that they are equal.
+\end{proof}
+
+\bibliographystyle{plain}
+\bibliography{notes}
+
+\end{document}
