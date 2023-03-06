@@ -1,12 +1,12 @@
 # Fdb version 3
-["bibtex notes-2023-03-04"] 1678107544 "notes-2023-03-04.aux" "notes-2023-03-04.bbl" "notes-2023-03-04" 1678107545
+["bibtex notes-2023-03-04"] 1678108021 "notes-2023-03-04.aux" "notes-2023-03-04.bbl" "notes-2023-03-04" 1678108022
   "D:/New folder (2)/bibtex/bst/bibtex/plain.bst" 1291864736 20613 bd3fbfa9f64872b81ac57a0dd2ed855f ""
-  "notes-2023-03-04.aux" 1678107544 280 d192be1046b91a278e17f2f11b55625f "pdflatex"
+  "notes-2023-03-04.aux" 1678108021 280 d192be1046b91a278e17f2f11b55625f "pdflatex"
   "notes.bib" 0 -1 0 ""
   (generated)
   "notes-2023-03-04.bbl"
   "notes-2023-03-04.blg"
-["pdflatex"] 1678107544 "d:/root-data/docs/notes-2023-03-04.tex" "d:/root-data/docs/notes-2023-03-04.pdf" "notes-2023-03-04" 1678107545
+["pdflatex"] 1678108021 "d:/root-data/docs/notes-2023-03-04.tex" "d:/root-data/docs/notes-2023-03-04.pdf" "notes-2023-03-04" 1678108022
   "C:/Users/dchou/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1200.pk" 1635328122 14064 2077c908646cd90beb9ddd55abaf0f92 ""
   "C:/Users/dchou/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1610638357 9246102 462e185fa64ff3b25e8cc334251c3510 ""
   "C:/Users/dchou/AppData/Local/MiKTeX/pdftex/config/pdftex.map" 1675451604 135819 803bc05baed5dd8f6fa69f391d31b8ae ""
@@ -65,14 +65,14 @@
   "D:/New folder (2)/tex/latex/l3backend/l3backend-pdftex.def" 1600952516 23704 02c466ff883953a445c97e55638005fc ""
   "D:/New folder (2)/tex/latex/tools/enumerate.sty" 1580644886 3469 19b6cb25f21abe53fb90b9fe27615441 ""
   "D:/New folder (2)/tex/latex/url/url.sty" 1388490452 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
-  "d:/root-data/docs/notes-2023-03-04.aux" 1678107544 280 d192be1046b91a278e17f2f11b55625f ""
-  "d:/root-data/docs/notes-2023-03-04.tex" 1678107543 4268 5074b7386a3df8fcfdbfb9f86fd955c2 ""
-  "notes-2023-03-04.aux" 1678107544 280 d192be1046b91a278e17f2f11b55625f "pdflatex"
+  "d:/root-data/docs/notes-2023-03-04.aux" 1678108021 280 d192be1046b91a278e17f2f11b55625f ""
+  "d:/root-data/docs/notes-2023-03-04.tex" 1678108020 4268 0173f9bdfa00d93f0cbabd669533ae1a ""
+  "notes-2023-03-04.aux" 1678108021 280 d192be1046b91a278e17f2f11b55625f "pdflatex"
   "notes-2023-03-04.bbl" 0 -1 0 "bibtex notes-2023-03-04"
-  "notes-2023-03-04.tex" 1678107543 4268 5074b7386a3df8fcfdbfb9f86fd955c2 ""
+  "notes-2023-03-04.tex" 1678108020 4268 0173f9bdfa00d93f0cbabd669533ae1a ""
   (generated)
-  "d:/root-data/docs/notes-2023-03-04.pdf"
-  "notes-2023-03-04.aux"
   "notes-2023-03-04.pdf"
   "d:/root-data/docs/notes-2023-03-04.log"
+  "d:/root-data/docs/notes-2023-03-04.pdf"
+  "notes-2023-03-04.aux"
   "notes-2023-03-04.log"
