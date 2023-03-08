@@ -308,29 +308,22 @@ end
 
 /-- A root system in `V` naturally determines another root system in the dual `V^*`. -/
 lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
-{ finite := sorry,
-  span_eq_top := sorry,
+{ finite := h.finite_coroots,
+  span_eq_top := h.coroot_span_eq_top,
   exists_dual :=
     begin
-    sorry,
-    -- rintros x ⟨α, rfl⟩,
-    -- refine ⟨module.dual.eval k V α, by simp, _⟩,
-    -- -- simp only [module.to_pre_symmetry_apply],
-    -- -- simp only [module.dual.eval_apply],
-    -- -- simp only [image_subset_iff],
-    -- simp only [module.to_pre_symmetry_apply, module.dual.eval_apply, image_subset_iff],
-    -- rintros y ⟨β, rfl⟩,
-    -- -- simp only [mem_preimage],
-    -- -- simp only [mem_range],
-    -- -- simp only [set_coe.exists],
-    -- simp only [mem_preimage, mem_range, set_coe.exists],
-    -- exact ⟨ട α β, h.symmetry_of_root_apply_mem α β, h.coroot_symmetry_apply_eq α β _⟩,
+    rintros x ⟨α, rfl⟩,
+    refine ⟨module.dual.eval k V α, by simp, _⟩,
+    simp only [module.to_pre_symmetry_apply, module.dual.eval_apply, image_subset_iff],
+    rintros y ⟨β, rfl⟩,
+    simp only [mem_preimage, mem_range, set_coe.exists],
+    exact ⟨ട α β, h.symmetry_of_root_apply_mem α β, h.coroot_symmetry_apply_eq α β _⟩,
   end,
   subset_zmultiples :=
   begin
 
     rintros aux ⟨α, rfl⟩ α' ⟨h₁, h₂⟩ - ⟨-, ⟨β, rfl⟩, rfl⟩,
-    have hα : h.coroot α ≠ 0, sorry {
+    have hα : h.coroot α ≠ 0, {
         intro h,
         simp only [h, linear_map.map_zero] at h₁,
         norm_num at h₁,
@@ -347,63 +340,6 @@ lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
     {
       apply fd,
     },
-    -- refine h.subset_zmultiples _ β.property (βᘁ) ⟨_, _⟩ ⟨α, α.property, _⟩,
-    -- sorry { simp only [subtype.val_eq_coe, coroot_apply_self_eq_two], },
-    -- sorry { exact h.coroot_to_pre_symmetry_subset β, },
-
-    -- { haveI := h.finite_dimensional,
-    --   suffices : (α : V) = (module.eval_equiv k V).symm α', {
-    --     sorry,
-    --     -- simp [this],
-    --     -- simp [this],
-    --   },
-    --   rw linear_equiv.eq_symm_apply,
-    -- --   -- unfold module.eval_equiv,
-    -- --   -- ext z,
-    -- --   -- rw [linear_equiv.of_bijective_apply, module.dual.eval_apply],
-    --   have hα : h.coroot α ≠ 0, {
-    --     sorry,
-    --     -- intro h,
-    --     -- simp only [h, linear_map.map_zero] at h₁,
-    --     -- norm_num at h₁,
-    --   },
-    --   -- haveI : no_zero_smul_divisors k V := infer_instance,
-
-    --   refine module.eq_dual_of_to_pre_symmetry_image_subseteq (hα) h.finite_coroots h.coroot_span_eq_top _ _ _ _,
-
-
-    -- --   -- apply module.eq_dual_of_to_pre_symmetry_image_subseteq (hα) h.finite_coroots h.coroot_span_eq_top,
-    --   sorry {
-    --     -- delta module.eval_equiv,
-    --     simp only [module.eval_equiv, linear_equiv.of_bijective_apply, module.dual.eval_apply, coroot_apply_self_eq_two],
-    --   },
-    --   {
-    --     intros v hv,
-    --     simp only [mem_range, set_coe.exists],
-    --     use α.val,
-    --     simp only [subtype.val_eq_coe, coroot_apply_self_eq_two],
-    --     rcases hv with ⟨x, hx, rfl⟩,
-    --     simp only [subtype.coe_prop, subtype.coe_eta, module.to_pre_symmetry_apply, exists_true_left],
-    --     sorry,
-    --   },
-    -- --   {
-    -- --     intros v hv,
-    -- --     simp only [mem_range, set_coe.exists],
-    -- --     use α.val,
-    -- --     simp only [subtype.val_eq_coe, coroot_apply_self_eq_two],
-    -- --     rcases hv with ⟨x, hx, rfl⟩,
-    -- --     simp only [subtype.coe_prop, subtype.coe_eta, module.to_pre_symmetry_apply, exists_true_left],
-
-
-
-
-
-
-
-    -- --     sorry,},
-      -- {exact h₁,},
-      -- { exact h₂, },
-    --  },
   end, }
 
 @[simp] lemma neg_mem (α : Φ) : - (α : V) ∈ Φ :=
