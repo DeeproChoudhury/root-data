@@ -149,7 +149,42 @@ begin
   exact (monotone_image hf₂).trans hg₂,
 end
 
+@[simp] lemma subsingleton_dual_iff {k V : Type*} [field k] [add_comm_group V] [module k V] :
+  subsingleton (dual k V) ↔ subsingleton V :=
+begin
+  refine ⟨λ h, ⟨λ v w, _⟩, λ h, ⟨λ f g, _⟩⟩,
+  { rw [← sub_eq_zero, ← forall_dual_apply_eq_zero_iff k (v - w)],
+    intros f,
+    simp [@subsingleton.elim _ h f 0], },
+  { ext v,
+    simp [@subsingleton.elim _ h v 0], },
+end
+
+@[simp] lemma nontrivial_dual_iff {k V : Type*} [field k] [add_comm_group V] [module k V] :
+  nontrivial (dual k V) ↔ nontrivial V :=
+by rw [← not_iff_not, not_nontrivial_iff_subsingleton, not_nontrivial_iff_subsingleton,
+  subsingleton_dual_iff]
+
 end module
+
+namespace submodule
+
+variables {k V : Type*} [field k] [add_comm_group V] [module k V] {p : submodule k V}
+
+lemma exists_dual_map_eq_bot_of_lt_top (hp : p < ⊤) : ∃ f : module.dual k V, f ≠ 0 ∧ p.map f = ⊥ :=
+begin
+  replace hp : nontrivial (module.dual k $ V ⧸ p) :=
+    module.nontrivial_dual_iff.mpr (quotient.nontrivial_of_lt_top p hp),
+  obtain ⟨f, g, h⟩ := hp,
+  replace h : f - g ≠ 0 := sub_ne_zero.mpr h,
+  refine ⟨(f - g).comp p.mkq, _, by simp [map_comp]⟩,
+  contrapose! h,
+  refine p.quot_hom_ext (λ v, _),
+  change (f - g).comp p.mkq v = _,
+  simp [h],
+end
+
+end submodule
 
 section root_systems
 
@@ -336,7 +371,6 @@ begin
   },
   intros v hv,
   -- use `ker_to_dual_eq_bot`
-  
   sorry,
 end
 
