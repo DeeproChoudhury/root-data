@@ -328,6 +328,8 @@ end
 lemma finite_coroots : (range h.coroot).finite :=
 @set.finite_range _ _ h.coroot $ finite_coe_iff.mpr h.finite
 
+
+
 lemma coroot_span_eq_top : submodule.span k (range h.coroot) = ⊤ :=
 begin
   suffices : ∀ (v : V) (h' : ∀ (α : Φ), h.coroot α v = 0), v = 0,
@@ -335,9 +337,15 @@ begin
     sorry,
   },
   intros v hv,
-  -- use `ker_to_dual_eq_bot`
-  
-  sorry,
+  have eq1 : h.to_dual v = 0,
+  { rw h.to_dual_apply,
+    simp_rw [hv, zero_smul],
+    rw finsum_eq_zero_of_forall_eq_zero,
+    intros phi,
+    refl, },
+  have mem1 : v ∈ h.to_dual.ker,
+  { rwa linear_map.mem_ker, },
+  rwa [ker_to_dual_eq_bot, submodule.mem_bot] at mem1,
 end
 
 lemma root_ne_zero (α : Φ) : (α : V) ≠ 0 :=
