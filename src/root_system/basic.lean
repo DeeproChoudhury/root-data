@@ -121,6 +121,10 @@ end
 -- i.e. they are all units in the automorphism group
 def weyl_group : subgroup $ (module.End k V)ˣ := subgroup.closure $ range h.symmetry_of_root
 
+@[simp] lemma symmetry_mem_weyl_group (α : Φ) :
+  ട α ∈ h.weyl_group :=
+subgroup.subset_closure $ mem_range_self α
+
 -- w acts on α and sends roots to roots (acts on roots)
 -- w acting on α gives a root, not a random vector
 lemma weyl_group_apply_root_mem (w : h.weyl_group) (α : Φ) : w • (α : V) ∈ Φ :=

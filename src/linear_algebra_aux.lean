@@ -3,7 +3,7 @@ import group_theory.order_of_element
 
 noncomputable theory
 
-open_locale tensor_product
+open_locale tensor_product big_operators classical
 open set function
 
 @[simp] lemma module.apply_eval_equiv_symm_apply
@@ -20,6 +20,8 @@ end
 @[simp] lemma module.coe_End_one {k V : Type*} [semiring k] [add_comm_monoid V] [module k V] :
   ⇑(1 : (module.End k V)ˣ) = id :=
 rfl
+
+attribute [protected] module.finite
 
 namespace module
 
@@ -135,6 +137,64 @@ end
   nontrivial (dual k V) ↔ nontrivial V :=
 by rw [← not_iff_not, not_nontrivial_iff_subsingleton, not_nontrivial_iff_subsingleton,
   subsingleton_dual_iff]
+
+/-- Given a representation of a finite group on a space carrying a bilinear form, we can take
+the average to obtain an invariant bilinear form.
+
+The API for `finsum` should be expanded to interact well with `finite`. This would make the proofs
+below trivial. -/
+def average_bilinear {G : Type*} [group G] [finite G]
+  (ρ : G →* (End k V)ˣ) (B : V →ₗ[k] dual k V) :
+  V →ₗ[k] dual k V :=
+{ to_fun := λ v, ∑ᶠ g, (B ((ρ g) • v)).comp (ρ g : V →ₗ[k] V),
+  map_add' := λ v w,
+  begin
+    rw ← finsum_add_distrib _,
+    { simp only [smul_add, map_add, linear_map.add_comp], },
+    { apply set.to_finite, },
+    { apply set.to_finite, },
+  end,
+  map_smul' := λ t v,
+  begin
+    haveI : fintype G := fintype.of_finite G,
+    simp only [finsum_eq_sum_of_fintype, ring_hom.id_apply, finset.smul_sum],
+    congr,
+    ext g w,
+    suffices : ρ g • t • v = t • ρ g • v,
+    { simp only [linear_map.comp_apply, linear_map.smul_apply, map_smul, this], },
+    exact linear_map.map_smul ↑(ρ g) t v,
+  end, }
+
+lemma average_bilinear_apply_apply {G : Type*} [group G] [finite G]
+  (ρ : G →* (End k V)ˣ) (B : V →ₗ[k] dual k V) (v w : V) :
+  average_bilinear ρ B v w = ∑ᶠ g, B ((ρ g) • v) ((ρ g) • w) :=
+begin
+  haveI : fintype G := fintype.of_finite G,
+  simpa only [average_bilinear, linear_map.coe_mk, finsum_eq_sum_of_fintype, linear_map.coe_fn_sum,
+    linear_map.coe_comp, finset.sum_apply, comp_app],
+end
+
+@[simp] lemma average_bilinear_smul_smul {G : Type*} [group G] [finite G]
+  (ρ : G →* (End k V)ˣ) (B : V →ₗ[k] dual k V) (v w : V) (g : G) :
+  average_bilinear ρ B ((ρ g) • v) ((ρ g) • w) = average_bilinear ρ B v w :=
+begin
+  simp only [average_bilinear_apply_apply, smul_smul, ← map_mul],
+  let b : G → k := λ g', B ((ρ g') • v) ((ρ g') • w),
+  let e : G ≃ G := equiv.mul_right g,
+  change ∑ᶠ g', (b ∘ e) g' = ∑ᶠ g', b g',
+  exact finsum_comp_equiv e,
+end
+
+/-- The assumption `linear_ordered_field` is stronger than necessary but enables an easy proof
+by just taking the average of a positive definite bilinear form. -/
+lemma exists_to_dual_ker_eq_bot {k V G : Type*}
+  [linear_ordered_field k] [add_comm_group V] [module k V] [finite_dimensional k V]
+  [group G] [finite G]
+  (ρ : G →* (End k V)ˣ) :
+  ∃ B : V →ₗ[k] dual k V, B.ker = ⊥ ∧ ∀ v w (g : G), B ((ρ g) • v) ((ρ g) • w) = B v w :=
+begin
+  sorry,
+end
 
 end module
 

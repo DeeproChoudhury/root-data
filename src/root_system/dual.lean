@@ -4,7 +4,7 @@ open set function
 
 namespace is_root_system
 
-variables {k V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
+variables {k V : Type*} [linear_ordered_field k] [char_zero k] [add_comm_group V] [module k V]
 variables {Φ : set V} (h : is_root_system k Φ)
 include h
 
@@ -44,6 +44,20 @@ end
 lemma finite_coroots : (range h.coroot).finite :=
 @set.finite_range _ _ h.coroot $ finite_coe_iff.mpr h.finite
 
+/-- An auxiliary result used only to prove `is_root_system.coroot_span_eq_top`.
+
+Note that `is_root_system.to_dual` shows that any root system carries a _canonical_ non-singular
+invariant bilinear form. This lemma only exists because we need it to prove the coroots span the
+dual space which we use to show `is_root_system.to_dual` is non-singular. -/
+lemma exists_to_dual_ker_eq_bot_forall :
+  ∃ B : V →ₗ[k] V →ₗ[k] k, B.ker = ⊥ ∧ ∀ v w (α : Φ), B (ട α v) (ട α w) = B v w :=
+begin
+  haveI := h.finite_dimensional,
+  haveI : finite h.weyl_group := h.finite_weyl_group,
+  obtain ⟨B, hB₁, hB₂⟩ := module.exists_to_dual_ker_eq_bot h.weyl_group.subtype,
+  exact ⟨B, hB₁, λ v w α, hB₂ v w ⟨ട α, h.symmetry_mem_weyl_group α⟩⟩,
+end
+
 lemma coroot_span_eq_top : submodule.span k (range h.coroot) = ⊤ :=
 begin
   suffices : ∀ (v : V) (h' : ∀ (α : Φ), h.coroot α v = 0), v = 0,
@@ -56,7 +70,7 @@ begin
 end
 
 theorem fd {k V : Type*}
-  [field k]
+  [linear_ordered_field k]
   [char_zero k]
   [add_comm_group V]
   [module k V]
