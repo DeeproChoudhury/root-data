@@ -1,4 +1,4 @@
-import roots
+import root_system.basic
 import analysis.quaternion
 import analysis.inner_product_space.dual
 import analysis.normed_space.pointwise

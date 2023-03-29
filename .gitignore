@@ -3,3 +3,6 @@
 /leanpkg.path
 *.aux
 *.log
+*.fdb_latexmk
+*.synctex.gz
+*.fls

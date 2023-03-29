@@ -2,6 +2,7 @@
 \usepackage{url, amsmath, amsthm, amsfonts, enumerate}
 
 \newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}{Corollary}[section]
 \newtheorem{definition}[lemma]{Definition}
 
 \title{A coroot calculation}
@@ -11,8 +12,9 @@
 \maketitle
 
 \begin{abstract}
-  An informal account of the proof of the lemma\\
-  \texttt{is\_root\_system.coroot\_symmetry\_apply\_eq}.
+  An informal account of the proof of the lemmas\\
+  \texttt{is\_root\_system.coroot\_symmetry\_apply\_eq} and
+  \texttt{is\_root\_system.coroot\_span\_eq\_top}.
 \end{abstract}
 
 \section{The coroot of the reflection of a root}
@@ -45,7 +47,7 @@ Recall the uniqueness lemma:
 Recall the definition of a root system:
 \begin{definition}
   Let $k$ be a field of characteristic zero, $V$ and vector space over $k$, and
-  $\Phi \subseteq V$. Then we say $\Phi$ is a \textbf{root system} for $V$ over $k$ if:
+  $\Phi \subseteq V$. Then we say $\Phi$ is a \textbf{root system} in $V$ over $k$ if:
   \begin{itemize}
     \item $\Phi$ is finite,
     \item $\Phi$ spans $V$,
@@ -59,7 +61,7 @@ Recall the definition of a root system:
 
 Recall the definition of the coroot and symmetry of a root:
 \begin{definition}
-  Let $\Phi$ be a root system for $V$ over $k$ and let $\alpha \in \Phi$ be a root. We define the
+  Let $\Phi$ be a root system in $V$ over $k$ and let $\alpha \in \Phi$ be a root. We define the
   \textbf{coroot} $\alpha^* \in V^*$ to be the unique linear form such that:
   \begin{itemize}
     \item $\alpha^*(\alpha) = 2$,
@@ -99,6 +101,94 @@ $\alpha^*$ and $\beta^*$. The following lemma gives the answer:
   \end{align*}
   To prove this we just pick any vector $v \in V$ and unfold the left and right hand sides applied
   to $v$ and observe that they are equal.
+\end{proof}
+
+\section{The span of the coroots}
+\begin{definition}\label{def:average_bilinear_form}
+  Let $V$ a vector space over a field $k$, $G$ a finite group, and:
+  \begin{align*}
+    \rho : G \to GL(k, V)
+  \end{align*}
+  a group homomorphism (aka a representation of $G$ on $V$). Given a bilinear form:
+  \begin{align*}
+    B : V \times V \to k,
+  \end{align*}
+  we define a new bilinear form $B_\rho$ as follows:
+  \begin{align}\label{average_formula}
+    B_\rho : V \times V &\to k\notag\\
+    (v, w) &\mapsto \sum_g B (g \cdot v, g \cdot w)
+  \end{align}
+  where the notation $g \cdot v$ means $\rho(g)(v)$.
+\end{definition}
+
+\begin{lemma}\label{lem:average_bilinear_form}
+  In the notation of definition \ref{def:average_bilinear_form}, the form $B_\rho$ is $G$-invariant,
+  i.e.,
+  \begin{align*}
+    B_\rho(g \cdot v, g \cdot w) = B_\rho(v, w),
+  \end{align*}
+  for all $v$, $w$ in $V$ and $g$ in $G$. Furthermore if $k$ is an ordered field and $B$ is
+  symmetric and positive definite, then so is $B_\rho$.
+\end{lemma}
+\begin{proof}
+  These are just calculations using formula \eqref{average_formula}.
+\end{proof}
+
+\begin{corollary}\label{cor:average_bilinear_form}
+  Let $\rho$ be a representation of a finite group $G$ on a finite-dimensional vector space $V$ over
+  an ordered field $k$. There exists a $G$-invariant symmetric positive definite bilinear form on
+  $V$.
+\end{corollary}
+\begin{proof}
+  Pick any symmetric positive definite bilinear form\footnote{E.g., choose a basis and define the
+  form to be the dot product of coordinates.} and apply lemma \ref{lem:average_bilinear_form} to
+  obtain an invariant form.
+\end{proof}
+
+\begin{corollary}\label{cor:weyl_invariant_bilinear}
+  Let $\Phi$ be a root system in a vector space $V$ over an ordered field $k$ and let:
+  \begin{align*}
+    \rho : W \to GL(k, V)
+  \end{align*}
+  be the corresponding representation of the Weyl group. There exists a $W$-invariant symmetric
+  positive definite bilinear form on $V$.
+\end{corollary}
+\begin{proof}
+  This follows from lemma \ref{cor:average_bilinear_form} because the Weyl
+  group is finite.
+\end{proof}
+
+\begin{lemma}[is\_root\_system.coroot\_span\_eq\_top]
+  Let $\Phi$ be a root system in a vector space $V$ over an ordered field $k$. The coroots span
+  $V^*$.
+\end{lemma}
+\begin{proof}
+  It is sufficient to show that for any $v$ in $V$:
+  \begin{align}\label{forall_coroot_apply_zero}
+    (\alpha^*(v) = 0 ~\mbox{for all $\alpha \in \Phi$}) \implies v = 0.
+  \end{align}
+  (Since a non-zero $v$ satisfying \eqref{forall_coroot_apply_zero} would define a non-zero linear
+  form vanishing on the span of the $\alpha^*$.)
+
+  Thus let $v$ be a vector satisfying the hypothesis of \eqref{forall_coroot_apply_zero}. Note that
+  we have:
+  \begin{align*}
+    s_\alpha(v) = v ~\mbox{for all $\alpha \in \Phi$}.
+  \end{align*}
+  Using corollary \ref{cor:weyl_invariant_bilinear} let $B$ be a Weyl-group-invariant non-singular
+  bilinear form on $V$. Let $\alpha \in \Phi$ and calculate:
+  \begin{align*}
+    B(v, \alpha) &= B(s_\alpha(v), s_\alpha(\alpha))\\
+                 &= B(v, -\alpha)\\
+                 &= -B(v, \alpha).
+  \end{align*}
+  and so:
+  \begin{align*}
+    B(v, \alpha) = 0,
+  \end{align*}
+  for all $\alpha \in \Phi$.
+
+  Since the roots span $V$ and $B$ is non-singular, we must have $v = 0$ as required.
 \end{proof}
 
 \bibliographystyle{plain}
