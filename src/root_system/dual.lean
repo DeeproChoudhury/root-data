@@ -66,6 +66,15 @@ begin
   },
   intros v hv,
   -- use `ker_to_dual_eq_bot`
+  have eq1 : h.to_dual v = 0,
+  { rw h.to_dual_apply,
+    simp_rw [hv, zero_smul],
+    rw finsum_eq_zero_of_forall_eq_zero,
+    intros phi,
+    refl, },
+  have mem1 : v ∈ h.to_dual.ker,
+  { rwa linear_map.mem_ker, },
+  rwa [ker_to_dual_eq_bot, submodule.mem_bot] at mem1,
   sorry,
 end
 
