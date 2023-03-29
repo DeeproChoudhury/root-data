@@ -91,7 +91,11 @@ begin
   obtain ⟨B, h1, h2⟩ := h.exists_to_dual_ker_eq_bot_forall,
   replace hv : ∀ α, ട α v = v,
   {
-    sorry,
+    intro α,
+    rw h.symmetry_of_root_apply,
+    rw hv,
+    rw zero_smul,
+    rw sub_zero,
   },
   specialize h2 v,
   simp_rw hv at h2,
