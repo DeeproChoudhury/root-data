@@ -62,19 +62,54 @@ lemma coroot_span_eq_top : submodule.span k (range h.coroot) = ⊤ :=
 begin
   suffices : ∀ (v : V) (h' : ∀ (α : Φ), h.coroot α v = 0), v = 0,
   {
-    sorry,
+    -- apply le_antisymm,
+    -- { intros v hv,
+    --   exact submodule.mem_top, },
+    -- {
+    --   -- intros f hf,
+    --   -- rw submodule.mem_span,
+    --   -- intros p hp,
+    --   -- apply hp,
+    --   -- rw range_subset_iff at hp,
+
+
+
+
+    -- },
+    contrapose! this,
+    rw ← lt_top_iff_ne_top at this,
+    obtain ⟨f, hf, hf'⟩ := submodule.exists_dual_map_eq_bot_of_lt_top this,
+    haveI := h.finite_dimensional,
+    refine ⟨(module.eval_equiv k V).symm f, λ α, _,
+      by simpa⟩,
+    simp only [module.apply_eval_equiv_symm_apply, ←submodule.mem_bot k, ←hf', submodule.mem_map],
+    refine ⟨h.coroot α, _, rfl⟩,
+    apply submodule.subset_span,
+    exact mem_range_self α,
   },
   intros v hv,
+  obtain ⟨B, h1, h2⟩ := h.exists_to_dual_ker_eq_bot_forall,
+  replace hv : ∀ α, ട α v = v,
+  {
+    sorry,
+  },
+  specialize h2 v,
+  simp_rw hv at h2,
+  replace h2 : ∀ (α : Φ), (B v) ((h.symmetry_of_root α) α) = (B v) α,
+  {
+    sorry,
+  },
+  simp at h2,
   -- use `ker_to_dual_eq_bot`
-  have eq1 : h.to_dual v = 0,
-  { rw h.to_dual_apply,
-    simp_rw [hv, zero_smul],
-    rw finsum_eq_zero_of_forall_eq_zero,
-    intros phi,
-    refl, },
-  have mem1 : v ∈ h.to_dual.ker,
-  { rwa linear_map.mem_ker, },
-  rwa [ker_to_dual_eq_bot, submodule.mem_bot] at mem1,
+  -- have eq1 : h.to_dual v = 0,
+  -- { rw h.to_dual_apply,
+  --   simp_rw [hv, zero_smul],
+  --   rw finsum_eq_zero_of_forall_eq_zero,
+  --   intros phi,
+  --   refl, },
+  -- have mem1 : v ∈ h.to_dual.ker,
+  -- { rwa linear_map.mem_ker, },
+  -- rwa [ker_to_dual_eq_bot, submodule.mem_bot] at mem1,
   sorry,
 end
 
