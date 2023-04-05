@@ -202,6 +202,7 @@ namespace submodule
 
 variables {k V : Type*} [field k] [add_comm_group V] [module k V] {p : submodule k V}
 
+-- For any proper submodule there exists a non-zero linear form vanishing on it
 lemma exists_dual_map_eq_bot_of_lt_top (hp : p < ⊤) : ∃ f : module.dual k V, f ≠ 0 ∧ p.map f = ⊥ :=
 begin
   replace hp : nontrivial (module.dual k $ V ⧸ p) :=

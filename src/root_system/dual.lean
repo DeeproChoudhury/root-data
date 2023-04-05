@@ -91,15 +91,9 @@ begin
     intros α,
     rw h2,
   },
-  simp only [symmetry_of_root_apply_self_neg, map_neg, set_coe.forall, subtype.coe_mk] at h2,
-  have h3 : ∀ (α : Φ), (B v) α = 0,
-  {
-     rintros ⟨x, hx⟩,
-     specialize h2 x, -- α = ⟨x, hx⟩
-
-
-    sorry,
-  },
+  simp only [symmetry_of_root_apply_self_neg, map_neg, set_coe.forall, subtype.coe_mk,
+    neg_eq_self_iff] at h2,
+  have h3 : ∀ (α : Φ), (B v) α = 0 := λ x, h2 x.1 x.2,
   have h4 : (B v) = 0,
   {
     ext α,
