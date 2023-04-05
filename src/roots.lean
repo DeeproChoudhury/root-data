@@ -334,6 +334,18 @@ lemma coroot_span_eq_top : submodule.span k (range h.coroot) = ⊤ :=
 begin
   suffices : ∀ (v : V) (h' : ∀ (α : Φ), h.coroot α v = 0), v = 0,
   {
+    apply le_antisymm,
+    { intros v hv,
+      exact submodule.mem_top, },
+    { intros v hv,
+      rw submodule.mem_span,
+      intros f hf,
+      apply hf,
+      rw range_subset_iff at hf,
+
+
+
+    },
     sorry,
   },
   intros v hv,

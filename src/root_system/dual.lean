@@ -1,4 +1,5 @@
 import root_system.basic
+import linear_algebra.finsupp
 
 open set function
 
@@ -62,26 +63,12 @@ lemma coroot_span_eq_top : submodule.span k (range h.coroot) = ⊤ :=
 begin
   suffices : ∀ (v : V) (h' : ∀ (α : Φ), h.coroot α v = 0), v = 0,
   {
-    -- apply le_antisymm,
-    -- { intros v hv,
-    --   exact submodule.mem_top, },
-    -- {
-    --   -- intros f hf,
-    --   -- rw submodule.mem_span,
-    --   -- intros p hp,
-    --   -- apply hp,
-    --   -- rw range_subset_iff at hp,
-
-
-
-
-    -- },
     contrapose! this,
     rw ← lt_top_iff_ne_top at this,
     obtain ⟨f, hf, hf'⟩ := submodule.exists_dual_map_eq_bot_of_lt_top this,
     haveI := h.finite_dimensional,
     refine ⟨(module.eval_equiv k V).symm f, λ α, _,
-      by simpa⟩,
+      by simpa only [ne.def, linear_equiv.map_eq_zero_iff]⟩,
     simp only [module.apply_eval_equiv_symm_apply, ←submodule.mem_bot k, ←hf', submodule.mem_map],
     refine ⟨h.coroot α, _, rfl⟩,
     apply submodule.subset_span,
@@ -101,19 +88,49 @@ begin
   simp_rw hv at h2,
   replace h2 : ∀ (α : Φ), (B v) ((h.symmetry_of_root α) α) = (B v) α,
   {
+    intros α,
+    rw h2,
+  },
+  simp only [symmetry_of_root_apply_self_neg, map_neg, set_coe.forall, subtype.coe_mk] at h2,
+  have h3 : ∀ (α : Φ), (B v) α = 0,
+  {
+    intros α,
+    
     sorry,
   },
-  simp at h2,
-  -- use `ker_to_dual_eq_bot`
-  -- have eq1 : h.to_dual v = 0,
-  -- { rw h.to_dual_apply,
-  --   simp_rw [hv, zero_smul],
-  --   rw finsum_eq_zero_of_forall_eq_zero,
-  --   intros phi,
-  --   refl, },
-  -- have mem1 : v ∈ h.to_dual.ker,
-  -- { rwa linear_map.mem_ker, },
-  -- rwa [ker_to_dual_eq_bot, submodule.mem_bot] at mem1,
+  have h4 : (B v) = 0,
+  {
+    ext α,
+    change (B v) α = 0,
+    have h5 : α ∈ submodule.span k Φ,
+    {
+      rw h.span_eq_top,
+      exact submodule.mem_top,
+    },
+    rw mem_span_set at h5,
+    rcases h5 with ⟨c, hc, rfl⟩,
+    simp,
+    refine finset.sum_eq_zero (λ p hp, _),
+    dsimp,
+    have hp' : p ∈ Φ,
+    {
+      exact hc (finset.mem_coe.mp hp),
+    },
+    specialize h3 ⟨p, hp'⟩,
+
+    -- rw ← h3 ⟨p, hp'⟩,
+    sorry,
+
+
+    -- cases h5 with αs h5,
+    -- rw ← h5.2,
+    -- rw linear_map.map_sum,
+  },
+  rw linear_map.ker_eq_bot at h1,
+  rw linear_map.map_zero at h4,
+
+
+
   sorry,
 end
 
