@@ -94,8 +94,10 @@ begin
   simp only [symmetry_of_root_apply_self_neg, map_neg, set_coe.forall, subtype.coe_mk] at h2,
   have h3 : ∀ (α : Φ), (B v) α = 0,
   {
-    intros α,
-    
+     rintros ⟨x, hx⟩,
+     specialize h2 x, -- α = ⟨x, hx⟩
+
+
     sorry,
   },
   have h4 : (B v) = 0,
@@ -109,7 +111,8 @@ begin
     },
     rw mem_span_set at h5,
     rcases h5 with ⟨c, hc, rfl⟩,
-    simp,
+    simp only [linear_map.map_finsupp_sum, linear_map.map_smulₛₗ,
+    ring_hom.id_apply, algebra.id.smul_eq_mul],
     refine finset.sum_eq_zero (λ p hp, _),
     dsimp,
     have hp' : p ∈ Φ,
@@ -117,9 +120,10 @@ begin
       exact hc (finset.mem_coe.mp hp),
     },
     specialize h3 ⟨p, hp'⟩,
+    simp only [mul_eq_zero],
+    exact or.intro_right _ h3,
 
     -- rw ← h3 ⟨p, hp'⟩,
-    sorry,
 
 
     -- cases h5 with αs h5,
@@ -127,11 +131,12 @@ begin
     -- rw linear_map.map_sum,
   },
   rw linear_map.ker_eq_bot at h1,
-  rw linear_map.map_zero at h4,
+  refine h1 _,
+  rw linear_map.map_zero,
+  exact h4,
 
-
-
-  sorry,
+  -- rw linear_map.map_zero,
+  -- rw linear_map.map_zero at h4,
 end
 
 theorem fd {k V : Type*}
