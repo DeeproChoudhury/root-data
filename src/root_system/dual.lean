@@ -62,8 +62,7 @@ end
 lemma coroot_span_eq_top : submodule.span k (range h.coroot) = ⊤ :=
 begin
   suffices : ∀ (v : V) (h' : ∀ (α : Φ), h.coroot α v = 0), v = 0,
-  {
-    contrapose! this,
+  { contrapose! this,
     rw ← lt_top_iff_ne_top at this,
     obtain ⟨f, hf, hf'⟩ := submodule.exists_dual_map_eq_bot_of_lt_top this,
     haveI := h.finite_dimensional,
@@ -72,65 +71,39 @@ begin
     simp only [module.apply_eval_equiv_symm_apply, ←submodule.mem_bot k, ←hf', submodule.mem_map],
     refine ⟨h.coroot α, _, rfl⟩,
     apply submodule.subset_span,
-    exact mem_range_self α,
-  },
+    exact mem_range_self α,},
   intros v hv,
   obtain ⟨B, h1, h2⟩ := h.exists_to_dual_ker_eq_bot_forall,
   replace hv : ∀ α, ട α v = v,
-  {
-    intro α,
-    rw h.symmetry_of_root_apply,
-    rw hv,
-    rw zero_smul,
-    rw sub_zero,
-  },
+  { intro α,
+    rw [h.symmetry_of_root_apply, hv, zero_smul, sub_zero], },
   specialize h2 v,
   simp_rw hv at h2,
   replace h2 : ∀ (α : Φ), (B v) ((h.symmetry_of_root α) α) = (B v) α,
-  {
-    intros α,
-    rw h2,
-  },
+  { intros α,
+    rw h2, },
   simp only [symmetry_of_root_apply_self_neg, map_neg, set_coe.forall, subtype.coe_mk,
     neg_eq_self_iff] at h2,
   have h3 : ∀ (α : Φ), (B v) α = 0 := λ x, h2 x.1 x.2,
   have h4 : (B v) = 0,
-  {
-    ext α,
+  { ext α,
     change (B v) α = 0,
     have h5 : α ∈ submodule.span k Φ,
-    {
-      rw h.span_eq_top,
-      exact submodule.mem_top,
-    },
+    { rw h.span_eq_top,
+      exact submodule.mem_top, },
     rw mem_span_set at h5,
     rcases h5 with ⟨c, hc, rfl⟩,
     simp only [linear_map.map_finsupp_sum, linear_map.map_smulₛₗ,
     ring_hom.id_apply, algebra.id.smul_eq_mul],
     refine finset.sum_eq_zero (λ p hp, _),
     dsimp,
-    have hp' : p ∈ Φ,
-    {
-      exact hc (finset.mem_coe.mp hp),
-    },
-    specialize h3 ⟨p, hp'⟩,
+    specialize h3 ⟨p, hc (finset.mem_coe.mp hp)⟩,
     simp only [mul_eq_zero],
-    exact or.intro_right _ h3,
-
-    -- rw ← h3 ⟨p, hp'⟩,
-
-
-    -- cases h5 with αs h5,
-    -- rw ← h5.2,
-    -- rw linear_map.map_sum,
-  },
+    exact or.intro_right _ h3, },
   rw linear_map.ker_eq_bot at h1,
   refine h1 _,
   rw linear_map.map_zero,
   exact h4,
-
-  -- rw linear_map.map_zero,
-  -- rw linear_map.map_zero at h4,
 end
 
 theorem fd {k V : Type*}
