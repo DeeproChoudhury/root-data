@@ -80,6 +80,7 @@ begin
   { rcases h with rfl | rfl; simp, },
 end
 
+-- Like proof of finiteness of weyl group
 lemma unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq
   {Φ : set V} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤)
   {u : (End k V)ˣ} (hu : u '' Φ ⊆ Φ) : is_of_fin_order u :=
@@ -185,6 +186,27 @@ begin
   exact finsum_comp_equiv e,
 end
 
+def _root_.basis.dot_product {ι : Type*} [finite ι] (b : basis ι k V) :  V →ₗ[k] dual k V
+:= b.to_dual
+
+lemma _root_.basis.dot_product_non_neg
+{k V ι: Type*} [finite ι] [linear_ordered_field k] [add_comm_group V] [module k V] (b : basis ι k V) (v : V):
+0 ≤ b.dot_product v v :=
+begin
+  rw [basis.dot_product],
+  refine eq.ge _,
+  -- apply b.to_dual_apply_right,
+
+  -- rw basis.to_dual_apply_left,
+  sorry,
+
+end
+-- #where
+
+lemma _root_.basis.dot_product_eq_zero_iff
+{k V ι: Type*} [finite ι] [linear_ordered_field k] [add_comm_group V] [module k V] (b : basis ι k V) (v : V):
+b.dot_product v v = 0 ↔ v = 0 := sorry
+
 /-- The assumption `linear_ordered_field` is stronger than necessary but enables an easy proof
 by just taking the average of a positive definite bilinear form. -/
 lemma exists_to_dual_ker_eq_bot {k V G : Type*}
@@ -193,7 +215,30 @@ lemma exists_to_dual_ker_eq_bot {k V G : Type*}
   (ρ : G →* (End k V)ˣ) :
   ∃ B : V →ₗ[k] dual k V, B.ker = ⊥ ∧ ∀ v w (g : G), B ((ρ g) • v) ((ρ g) • w) = B v w :=
 begin
-  sorry,
+  obtain ⟨s, ⟨b⟩⟩ := basis.exists_basis k V,
+  haveI hfintype : fintype s,
+  {
+    apply finite_dimensional.fintype_basis_index b,
+  },
+  haveI : finite s,
+  {
+    exact fintype.finite hfintype,
+  },
+  refine ⟨average_bilinear ρ b.dot_product, _, λ v w g, _⟩,
+  {
+    apply linear_map.ker_eq_bot_of_injective,
+    intros v w h,
+    have h' : b.dot_product v v = b.dot_product w w,
+    {
+      -- rw average_bilinear_apply_apply,
+      sorry,
+    },
+
+    sorry,
+  },
+  {
+    simp only [average_bilinear_smul_smul],
+  },
 end
 
 end module
