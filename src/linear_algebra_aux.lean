@@ -1,5 +1,7 @@
 import linear_algebra.contraction
 import group_theory.order_of_element
+import linear_algebra.bilinear_form
+import linear_algebra.quadratic_form.basic
 
 noncomputable theory
 
@@ -175,6 +177,22 @@ begin
     linear_map.coe_comp, finset.sum_apply, comp_app],
 end
 
+def _root_.quadratic_form.group_action (Q : quadratic_form k V)
+(g : (End k V)ˣ) : quadratic_form k V := sorry
+
+@[simp]
+lemma _root_.quadratic_form.group_action.pos_def_iff {k V : Type*}
+[linear_ordered_field k] [add_comm_group V] [module k V] (Q : quadratic_form k V)
+(g : (End k V)ˣ) : (Q.group_action g).pos_def ↔ Q.pos_def := sorry
+
+-- Can avoid proving this lemma if we delete `average_bilinear` and just use
+-- `∑ᶠ g, B.to_bilin.to_quadratic_form.group_action (ρ g)` instead
+lemma average_bilinear_eq_sum {G : Type*} [group G] [finite G]
+  (ρ : G →* (End k V)ˣ) (B : V →ₗ[k] dual k V) :
+  (average_bilinear ρ B).to_bilin.to_quadratic_form
+  = ∑ᶠ g, B.to_bilin.to_quadratic_form.group_action (ρ g)
+  := sorry
+
 @[simp] lemma average_bilinear_smul_smul {G : Type*} [group G] [finite G]
   (ρ : G →* (End k V)ˣ) (B : V →ₗ[k] dual k V) (v w : V) (g : G) :
   average_bilinear ρ B ((ρ g) • v) ((ρ g) • w) = average_bilinear ρ B v w :=
@@ -186,26 +204,25 @@ begin
   exact finsum_comp_equiv e,
 end
 
-def _root_.basis.dot_product {ι : Type*} [finite ι] (b : basis ι k V) :  V →ₗ[k] dual k V
-:= b.to_dual
+#check basis.to_dual
+#check linear_map.to_bilin
+#check bilin_form.to_quadratic_form
+#check quadratic_form.pos_def
 
-lemma _root_.basis.dot_product_non_neg
-{k V ι: Type*} [finite ι] [linear_ordered_field k] [add_comm_group V] [module k V] (b : basis ι k V) (v : V):
-0 ≤ b.dot_product v v :=
-begin
-  rw [basis.dot_product],
-  refine eq.ge _,
-  -- apply b.to_dual_apply_right,
+lemma _root_.basis.to_dual_pos_def {k V ι : Type*}
+[linear_ordered_field k] [add_comm_group V] [module k V] (b : basis ι k V):
+b.to_dual.to_bilin.to_quadratic_form.pos_def := sorry
 
-  -- rw basis.to_dual_apply_left,
-  sorry,
+-- use induction on `quadratic_form.pos_def.add` --
+lemma _root_.quadratic_form.pos_def.sum {k V ι : Type*} [finite ι]
+[linear_ordered_field k] [add_comm_group V] [module k V] (q : ι → quadratic_form k V)
+(hq : ∀ i, (q i).pos_def):
+(∑ᶠ i, q i).pos_def := sorry
 
-end
--- #where
+lemma _root_.linear_map.to_bilin.pos_def.ker_eq_bot {k V : Type*}
+[linear_ordered_field k] [add_comm_group V] [module k V] (b : V →ₗ[k] dual k V)
+(hb : b.to_bilin.to_quadratic_form.pos_def) : b.ker = ⊥ := sorry
 
-lemma _root_.basis.dot_product_eq_zero_iff
-{k V ι: Type*} [finite ι] [linear_ordered_field k] [add_comm_group V] [module k V] (b : basis ι k V) (v : V):
-b.dot_product v v = 0 ↔ v = 0 := sorry
 
 /-- The assumption `linear_ordered_field` is stronger than necessary but enables an easy proof
 by just taking the average of a positive definite bilinear form. -/
@@ -224,17 +241,14 @@ begin
   {
     exact fintype.finite hfintype,
   },
-  refine ⟨average_bilinear ρ b.dot_product, _, λ v w g, _⟩,
+  refine ⟨average_bilinear ρ b.to_dual, _, λ v w g, _⟩,
   {
-    apply linear_map.ker_eq_bot_of_injective,
-    intros v w h,
-    have h' : b.dot_product v v = b.dot_product w w,
-    {
-      -- rw average_bilinear_apply_apply,
-      sorry,
-    },
-
-    sorry,
+    apply linear_map.to_bilin.pos_def.ker_eq_bot,
+    rw average_bilinear_eq_sum,
+    apply quadratic_form.pos_def.sum,
+    intros g,
+    rw quadratic_form.group_action.pos_def_iff,
+    convert b.to_dual_pos_def,
   },
   {
     simp only [average_bilinear_smul_smul],
