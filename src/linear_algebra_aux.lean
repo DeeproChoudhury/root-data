@@ -141,6 +141,21 @@ end
 by rw [← not_iff_not, not_nontrivial_iff_subsingleton, not_nontrivial_iff_subsingleton,
   subsingleton_dual_iff]
 
+-- May or may not need this.
+@[simp] lemma _root_.quadratic_form.to_quadratic_form_polar_bilin (Q : quadratic_form k V) :
+  Q.polar_bilin.to_quadratic_form = (2 : k) • Q :=
+by { ext, simp, }
+
+-- May or may not need this.
+@[simp] lemma _root_.bilin_form.to_quadratic_form.polar_bilin
+  {B : bilin_form k V} (h : B.is_symm) :
+  B.to_quadratic_form.polar_bilin = (2 : k) • B :=
+begin
+  ext v w,
+  erw [quadratic_form.polar_bilin_apply, bilin_form.smul_apply, bilin_form.polar_to_quadratic_form,
+    h.eq w v, two_smul],
+end
+
 /-- Given a representation of a finite group on a space carrying a bilinear form, we can take
 the average to obtain an invariant bilinear form.
 
@@ -177,21 +192,28 @@ begin
     linear_map.coe_comp, finset.sum_apply, comp_app],
 end
 
-def _root_.quadratic_form.group_action (Q : quadratic_form k V)
-(g : (End k V)ˣ) : quadratic_form k V := sorry
-
-@[simp]
-lemma _root_.quadratic_form.group_action.pos_def_iff {k V : Type*}
-[linear_ordered_field k] [add_comm_group V] [module k V] (Q : quadratic_form k V)
-(g : (End k V)ˣ) : (Q.group_action g).pos_def ↔ Q.pos_def := sorry
+@[simp] lemma _root_.quadratic_form.group_action.pos_def_iff
+  {k V : Type*} [linear_ordered_field k] [add_comm_group V] [module k V]
+  (Q : quadratic_form k V) (g : (End k V)ˣ) :
+  (Q.comp (g : V →ₗ[k] V)).pos_def ↔ Q.pos_def :=
+sorry
 
 -- Can avoid proving this lemma if we delete `average_bilinear` and just use
 -- `∑ᶠ g, B.to_bilin.to_quadratic_form.group_action (ρ g)` instead
 lemma average_bilinear_eq_sum {G : Type*} [group G] [finite G]
   (ρ : G →* (End k V)ˣ) (B : V →ₗ[k] dual k V) :
-  (average_bilinear ρ B).to_bilin.to_quadratic_form
-  = ∑ᶠ g, B.to_bilin.to_quadratic_form.group_action (ρ g)
-  := sorry
+  (average_bilinear ρ B).to_bilin.to_quadratic_form =
+  ∑ᶠ g, B.to_bilin.to_quadratic_form.comp (ρ g : V →ₗ[k] V) :=
+begin
+  ext v,
+  haveI : fintype G := fintype.of_finite G,
+  simp only [average_bilinear, linear_map.coe_mk, finsum_eq_sum_of_fintype, linear_map.coe_fn_sum,
+    linear_map.coe_comp, finset.sum_apply, comp_app, bilin_form.to_quadratic_form_apply,
+    quadratic_form.sum_apply, quadratic_form.comp_apply],
+  change (∑ g, (B (ρ g • v)).comp ↑(ρ g)) v = ∑ g, B (ρ g v) (ρ g v), -- TODO Should be via `simp`
+  simp only [linear_map.coe_fn_sum, finset.sum_apply, linear_map.coe_comp, comp_app],
+  refl, -- TODO Should be via `simp`
+end
 
 @[simp] lemma average_bilinear_smul_smul {G : Type*} [group G] [finite G]
   (ρ : G →* (End k V)ˣ) (B : V →ₗ[k] dual k V) (v w : V) (g : G) :
@@ -204,25 +226,23 @@ begin
   exact finsum_comp_equiv e,
 end
 
-#check basis.to_dual
-#check linear_map.to_bilin
-#check bilin_form.to_quadratic_form
-#check quadratic_form.pos_def
-
 lemma _root_.basis.to_dual_pos_def {k V ι : Type*}
-[linear_ordered_field k] [add_comm_group V] [module k V] (b : basis ι k V):
-b.to_dual.to_bilin.to_quadratic_form.pos_def := sorry
+  [linear_ordered_field k] [add_comm_group V] [module k V] (b : basis ι k V) :
+  b.to_dual.to_bilin.to_quadratic_form.pos_def :=
+sorry
 
--- use induction on `quadratic_form.pos_def.add` --
+-- use induction on `quadratic_form.pos_def.add`
 lemma _root_.quadratic_form.pos_def.sum {k V ι : Type*} [finite ι]
-[linear_ordered_field k] [add_comm_group V] [module k V] (q : ι → quadratic_form k V)
-(hq : ∀ i, (q i).pos_def):
-(∑ᶠ i, q i).pos_def := sorry
+  [linear_ordered_field k] [add_comm_group V] [module k V] (q : ι → quadratic_form k V)
+  (hq : ∀ i, (q i).pos_def) :
+  (∑ᶠ i, q i).pos_def :=
+sorry
 
 lemma _root_.linear_map.to_bilin.pos_def.ker_eq_bot {k V : Type*}
-[linear_ordered_field k] [add_comm_group V] [module k V] (b : V →ₗ[k] dual k V)
-(hb : b.to_bilin.to_quadratic_form.pos_def) : b.ker = ⊥ := sorry
-
+  [linear_ordered_field k] [add_comm_group V] [module k V] (b : V →ₗ[k] dual k V)
+  (hb : b.to_bilin.to_quadratic_form.pos_def) :
+  b.ker = ⊥ :=
+sorry
 
 /-- The assumption `linear_ordered_field` is stronger than necessary but enables an easy proof
 by just taking the average of a positive definite bilinear form. -/
@@ -233,26 +253,27 @@ lemma exists_to_dual_ker_eq_bot {k V G : Type*}
   ∃ B : V →ₗ[k] dual k V, B.ker = ⊥ ∧ ∀ v w (g : G), B ((ρ g) • v) ((ρ g) • w) = B v w :=
 begin
   obtain ⟨s, ⟨b⟩⟩ := basis.exists_basis k V,
-  haveI hfintype : fintype s,
-  {
-    apply finite_dimensional.fintype_basis_index b,
-  },
-  haveI : finite s,
-  {
-    exact fintype.finite hfintype,
-  },
-  refine ⟨average_bilinear ρ b.to_dual, _, λ v w g, _⟩,
-  {
-    apply linear_map.to_bilin.pos_def.ker_eq_bot,
-    rw average_bilinear_eq_sum,
+  refine ⟨average_bilinear ρ b.to_dual, _, λ v w g, by simp only [average_bilinear_smul_smul]⟩,
+  apply linear_map.to_bilin.pos_def.ker_eq_bot,
+  rw average_bilinear_eq_sum,
+  apply quadratic_form.pos_def.sum,
+  intros g,
+  rw quadratic_form.group_action.pos_def_iff,
+  convert b.to_dual_pos_def,
+  /- Possible alternative approach if seek to drop `average_bilinear`:
+  let Q : quadratic_form k V := ∑ᶠ g, b.to_dual.to_bilin.to_quadratic_form.comp (ρ g : V →ₗ[k] V),
+  refine ⟨Q.polar_bilin.to_lin, _, λ v w g, _⟩,
+  { apply linear_map.to_bilin.pos_def.ker_eq_bot,
+    change Q.polar_bilin.to_quadratic_form.pos_def, -- TODO Should be via `simp`
+    simp only [quadratic_form.to_quadratic_form_polar_bilin],
+    refine quadratic_form.pos_def.smul _ (two_pos : 0 < (2 : k)),
     apply quadratic_form.pos_def.sum,
     intros g,
     rw quadratic_form.group_action.pos_def_iff,
-    convert b.to_dual_pos_def,
-  },
-  {
-    simp only [average_bilinear_smul_smul],
-  },
+    convert b.to_dual_pos_def, },
+  { change Q.polar_bilin (ρ g v) (ρ g w) = Q.polar_bilin v w, -- TODO Should be via `simp`
+    sorry, },
+  -/
 end
 
 end module
