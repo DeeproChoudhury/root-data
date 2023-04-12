@@ -229,7 +229,13 @@ end
 lemma _root_.basis.to_dual_pos_def {k V ι : Type*}
   [linear_ordered_field k] [add_comm_group V] [module k V] (b : basis ι k V) :
   b.to_dual.to_bilin.to_quadratic_form.pos_def :=
-sorry
+begin
+  intros v hv,
+  simp only [bilin_form.to_quadratic_form_apply],
+  change 0 < b.to_dual v v, -- TODO Should be via `simp`.
+  -- TODO Now examine API for `basis.to_dual`
+  sorry,
+end
 
 -- use induction on `quadratic_form.pos_def.add`
 lemma _root_.quadratic_form.pos_def.sum {k V ι : Type*} [finite ι]
@@ -242,7 +248,18 @@ lemma _root_.linear_map.to_bilin.pos_def.ker_eq_bot {k V : Type*}
   [linear_ordered_field k] [add_comm_group V] [module k V] (b : V →ₗ[k] dual k V)
   (hb : b.to_bilin.to_quadratic_form.pos_def) :
   b.ker = ⊥ :=
-sorry
+begin
+  ext v,
+  simp only [linear_map.mem_ker, submodule.mem_bot],
+  refine ⟨λ hv, _, λ hv, _⟩,
+  { rw ← hb.anisotropic.eq_zero_iff,
+    simp only [bilin_form.to_quadratic_form_apply],
+    change b v v = 0, -- TODO Should be via `simp`
+    rw hv,
+    simp, },
+  { rw hv,
+    simp, },
+end
 
 /-- The assumption `linear_ordered_field` is stronger than necessary but enables an easy proof
 by just taking the average of a positive definite bilinear form. -/
