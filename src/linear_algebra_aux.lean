@@ -237,12 +237,16 @@ begin
   sorry,
 end
 
--- use induction on `quadratic_form.pos_def.add`
-lemma _root_.quadratic_form.pos_def.sum {k V ι : Type*} [finite ι]
+lemma _root_.quadratic_form.pos_def.sum {k V ι : Type*} [finite ι] [nonempty ι]
   [linear_ordered_field k] [add_comm_group V] [module k V] (q : ι → quadratic_form k V)
   (hq : ∀ i, (q i).pos_def) :
   (∑ᶠ i, q i).pos_def :=
-sorry
+begin
+  haveI : fintype ι := fintype.of_finite ι,
+  simp only [finsum_eq_sum_of_fintype],
+  -- Now try using `finset.sum_induction_nonempty`
+  sorry,
+end
 
 lemma _root_.linear_map.to_bilin.pos_def.ker_eq_bot {k V : Type*}
   [linear_ordered_field k] [add_comm_group V] [module k V] (b : V →ₗ[k] dual k V)
