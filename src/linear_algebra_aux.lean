@@ -226,6 +226,13 @@ begin
   exact finsum_comp_equiv e,
 end
 
+-- A better version of `basis.to_dual_total_left` which we'll need.
+@[simp] lemma _root_.basis.to_dual_total_left'
+  {R M ι : Type*} [comm_semiring R] [add_comm_monoid M] [module R M] [decidable_eq ι]
+  (b : basis ι R M) (f : ι →₀ R) :
+  (b.to_dual ((finsupp.total ι M R b) f)) ∘ b = f :=
+by { ext, simp, }
+
 lemma _root_.basis.to_dual_pos_def {k V ι : Type*}
   [linear_ordered_field k] [add_comm_group V] [module k V] (b : basis ι k V) :
   b.to_dual.to_bilin.to_quadratic_form.pos_def :=
@@ -233,7 +240,14 @@ begin
   intros v hv,
   simp only [bilin_form.to_quadratic_form_apply],
   change 0 < b.to_dual v v, -- TODO Should be via `simp`.
-  -- TODO Now examine API for `basis.to_dual`
+  replace hv : (b.repr v).support.nonempty, { contrapose! hv, simpa using hv, },
+  /- The following lemmas should now be useful:
+   * `b.total_repr v` (e.g., rewrite backwards)
+   * `finsupp.apply_total`
+   * `b.to_dual_total_left'` (added above)
+   * `finsupp.total_apply`
+   * `finset.sum_pos`
+  -/
   sorry,
 end
 
