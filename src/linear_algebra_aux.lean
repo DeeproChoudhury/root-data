@@ -241,14 +241,16 @@ begin
   simp only [bilin_form.to_quadratic_form_apply],
   change 0 < b.to_dual v v, -- TODO Should be via `simp`.
   replace hv : (b.repr v).support.nonempty, { contrapose! hv, simpa using hv, },
-  /- The following lemmas should now be useful:
-   * `b.total_repr v` (e.g., rewrite backwards)
-   * `finsupp.apply_total`
-   * `b.to_dual_total_left'` (added above)
-   * `finsupp.total_apply`
-   * `finset.sum_pos`
-  -/
-  sorry,
+  rw [←b.total_repr v, finsupp.apply_total, b.to_dual_total_left', finsupp.total_apply],
+  apply finset.sum_pos,
+  rintros i hi,
+  simp only [finsupp.mem_support_iff] at hi,
+  simp only [algebra.id.smul_eq_mul, mul_self_pos, ne.def],
+  exact hi,
+  exact hv,
+  -- simp only [hi, b.repr_self, ne.def, not_false_iff, zero_ne_one, mul_zero],
+  -- simp only [finsupp.apply_total, b.to_dual_total_left', finsupp.total_apply],
+  -- obtain ⟨c, hc⟩ := hv,
 end
 
 lemma _root_.quadratic_form.pos_def.sum {k V ι : Type*} [finite ι] [nonempty ι]
@@ -258,7 +260,23 @@ lemma _root_.quadratic_form.pos_def.sum {k V ι : Type*} [finite ι] [nonempty �
 begin
   haveI : fintype ι := fintype.of_finite ι,
   simp only [finsum_eq_sum_of_fintype],
-  -- Now try using `finset.sum_induction_nonempty`
+  -- use `finset.sum_induction_nonempty`
+  -- (or `finset.sum_induction` if you can prove `ι` is nonempty)
+  -- to prove the goal.
+
+  sorry,
+end
+
+lemma _root_.quadratic_form.pos_def.sum_induction {k V ι : Type*} [finite ι] [nonempty ι] [fintype ι]
+  [linear_ordered_field k] [add_comm_group V] [module k V] (q : ι → quadratic_form k V)
+  (hq : ∀ i, (q i).pos_def) :
+  (finset.univ.sum q).pos_def :=
+begin
+  -- use `finset.sum_induction_nonempty`
+  -- (or `finset.sum_induction` if you can prove `ι` is nonempty)
+  -- to prove the goal.
+  
+
   sorry,
 end
 
