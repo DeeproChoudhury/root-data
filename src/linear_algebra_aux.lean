@@ -258,12 +258,8 @@ begin
   haveI : fintype ι := fintype.of_finite ι,
   simp only [finsum_eq_sum_of_fintype],
   -- use `finset.sum_induction_nonempty`
-  refine finset.sum_induction_nonempty _ _ _ _ _,
-  { intros a b ha hb,
-    exact quadratic_form.pos_def.add _ _ ha hb, },
-  { exact finset.univ_nonempty, },
-  { intros i hi,
-    exact hq i, },
+  refine finset.sum_induction_nonempty _ _ (λ a b ha hb, quadratic_form.pos_def.add _ _ ha hb)
+  finset.univ_nonempty (λ i hi, hq _),
 end
 
 lemma _root_.linear_map.to_bilin.pos_def.ker_eq_bot {k V : Type*}
