@@ -192,14 +192,30 @@ begin
     linear_map.coe_comp, finset.sum_apply, comp_app],
 end
 
-@[simp] lemma _root_.quadratic_form.group_action.pos_def_iff
+@[simp] lemma _root_.quadratic_form.comp_pos_def_iff
   {k V : Type*} [linear_ordered_field k] [add_comm_group V] [module k V]
   (Q : quadratic_form k V) (g : (End k V)ˣ) :
   (Q.comp (g : V →ₗ[k] V)).pos_def ↔ Q.pos_def :=
-sorry
+begin
+  suffices : ∀ (Q : quadratic_form k V) (g : (End k V)ˣ),
+    Q.pos_def → (Q.comp (g : V →ₗ[k] V)).pos_def,
+  { refine ⟨λ hQ,  _, this Q g⟩,
+    convert this (Q.comp (g : V →ₗ[k] V)) g⁻¹ hQ,
+    ext v,
+    simp_rw [quadratic_form.comp_apply, ← linear_map.comp_apply, ← linear_map.mul_eq_comp],
+    simp, },
+  clear Q g, intros Q g hQ v hv,
+  replace hv : g v ≠ 0,
+  { contrapose! hv,
+    replace hv : (↑g⁻¹ : V →ₗ[k] V).comp (↑g : V →ₗ[k] V) v = (↑g⁻¹ : V →ₗ[k] V) 0 :=
+      linear_map.congr_arg hv,
+    simpa [← linear_map.mul_eq_comp] using hv, },
+  simp only [quadratic_form.comp_apply],
+  exact hQ _ hv,
+end
 
 -- Can avoid proving this lemma if we delete `average_bilinear` and just use
--- `∑ᶠ g, B.to_bilin.to_quadratic_form.group_action (ρ g)` instead
+-- `∑ᶠ g, B.to_bilin.to_quadratic_form.comp (ρ g)` instead
 lemma average_bilinear_eq_sum {G : Type*} [group G] [finite G]
   (ρ : G →* (End k V)ˣ) (B : V →ₗ[k] dual k V) :
   (average_bilinear ρ B).to_bilin.to_quadratic_form =
@@ -293,7 +309,7 @@ begin
   rw average_bilinear_eq_sum,
   apply quadratic_form.pos_def.sum,
   intros g,
-  rw quadratic_form.group_action.pos_def_iff,
+  rw quadratic_form.comp_pos_def_iff,
   convert b.to_dual_pos_def,
   /- Possible alternative approach if seek to drop `average_bilinear`:
   let Q : quadratic_form k V := ∑ᶠ g, b.to_dual.to_bilin.to_quadratic_form.comp (ρ g : V →ₗ[k] V),
@@ -304,7 +320,7 @@ begin
     refine quadratic_form.pos_def.smul _ (two_pos : 0 < (2 : k)),
     apply quadratic_form.pos_def.sum,
     intros g,
-    rw quadratic_form.group_action.pos_def_iff,
+    rw quadratic_form.comp_pos_def_iff,
     convert b.to_dual_pos_def, },
   { change Q.polar_bilin (ρ g v) (ρ g w) = Q.polar_bilin v w, -- TODO Should be via `simp`
     sorry, },
