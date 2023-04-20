@@ -82,11 +82,103 @@ begin
   { rcases h with rfl | rfl; simp, },
 end
 
+-- lemma unit_inv' {Φ : set V} (hΦ : Φ.finite) (u : (End k V)ˣ) (x : Φ) :
+-- u⁻¹ (u x) = (1 : End k V) x :=
+-- begin
+--   rw ← linear_map.comp_apply,
+-- end
+
+lemma unit.inv_left {Φ : set V} (u : (End k V)ˣ) (x : Φ) :
+  u⁻¹ (u x) = x :=
+begin
+  erw [←linear_map.comp_apply],
+  rw ← linear_map.mul_eq_comp,
+  erw units.inv_mul,
+  rw linear_map.one_apply,
+  -- rw units.mul_inv_cancel_left,
+end
+
+lemma unit.inv_right {Φ : set V} (u : (End k V)ˣ) (x : Φ) :
+  u (u⁻¹ x) = x :=
+begin
+  erw [←linear_map.comp_apply],
+  rw ← linear_map.mul_eq_comp,
+  erw units.mul_inv,
+  rw linear_map.one_apply,
+  -- rw units.mul_inv_cancel_left,
+end
+
+lemma unit.apply_root_mem {Φ : set V} (u : (End k V)ˣ) (x : Φ) :
+  u (x : V) ∈ Φ :=
+begin
+  -- obtain ⟨n, hn⟩ := hΦ.to_finset.mem_image.mp hx,
+  sorry,
+end
+
+@[simps]
+lemma unit.to_perm {Φ : set V} (u : (End k V)ˣ) :
+  equiv.perm Φ :=
+{ to_fun := λ x, ⟨u x, unit.apply_root_mem u x⟩,
+  inv_fun := λ x, ⟨u⁻¹ x, unit.apply_root_mem u⁻¹ x⟩,
+  left_inv :=
+  begin
+    intro x,
+    simp only [subtype.coe_mk],
+    apply subtype.eq,
+    simp only [subtype.val_eq_coe],
+    apply unit.inv_left,
+    -- simp only [←linear_map.mul_apply],
+    -- apply subtype.ext_iff_val.mpr,
+    -- simp,
+    -- change u⁻¹ (u x) = x,
+  end,
+  right_inv :=
+  begin
+    intro x,
+    simp only [subtype.coe_mk],
+    ext,
+    simp only [subtype.val_eq_coe],
+    apply unit.inv_right,
+  end, }
+
+@[simps]
+def unit.to_perm' {Φ : set V} : ((End k V)ˣ) →* equiv.perm Φ
+:=
+{ to_fun := unit.to_perm,
+  map_one' :=
+  begin
+    ext,
+    simp only [unit.to_perm_apply_coe, coe_End_one, id.def, equiv.perm.coe_one],
+  end,
+  map_mul' :=
+  begin
+    intros u₁ u₂,
+    ext,
+    simp only [unit.to_perm_apply_coe, equiv.perm.coe_mul],
+    refine linear_map.mul_apply _ _ _,
+  end, }
+
+lemma unit.injective_to_perm' {Φ : set V}:
+  injective ((unit.to_perm') : ((End k V)ˣ) → equiv.perm Φ) :=
+begin
+  sorry,
+end
+
 -- Like proof of finiteness of weyl group
 lemma unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq
   {Φ : set V} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤)
   {u : (End k V)ˣ} (hu : u '' Φ ⊆ Φ) : is_of_fin_order u :=
-sorry
+begin
+  suffices : finite (equiv.perm Φ),
+  {
+    haveI := this,
+    type_check finite.of_injective (unit.to_perm') unit.injective_to_perm',
+    sorry,
+  },
+  haveI : fintype Φ := hΦ₁.fintype,
+  exact equiv.finite_left,
+  -- obtain ⟨n, hn⟩ : ∃ n : ℕ, 0 < n ∧ u ^ n = u⁻¹,
+end
 
 /-- Uniqueness lemma from page 25 of Serre's "Complex semisimple Lie algebras". -/
 lemma eq_dual_of_to_pre_symmetry_image_subseteq [char_zero k] [no_zero_smul_divisors k V]
