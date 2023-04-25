@@ -90,44 +90,22 @@ end
 
 lemma unit.inv_left {Φ : set V} (u : (End k V)ˣ) (x : Φ) :
   u⁻¹ (u x) = x :=
-begin
-  erw [←linear_map.comp_apply],
-  rw ← linear_map.mul_eq_comp,
-  erw units.inv_mul,
-  rw linear_map.one_apply,
-  -- rw units.mul_inv_cancel_left,
-end
+(linear_map.general_linear_group.to_linear_equiv u).symm_apply_apply x
 
 lemma unit.inv_right {Φ : set V} (u : (End k V)ˣ) (x : Φ) :
   u (u⁻¹ x) = x :=
-begin
-  erw [←linear_map.comp_apply],
-  rw ← linear_map.mul_eq_comp,
-  erw units.mul_inv,
-  rw linear_map.one_apply,
-  -- rw units.mul_inv_cancel_left,
-end
+(linear_map.general_linear_group.to_linear_equiv u).apply_symm_apply x
 
 lemma unit.apply_root_mem {Φ : set V} (u : mul_action.stabilizer (End k V)ˣ Φ) (x : Φ) :
   u (x : V) ∈ Φ :=
 begin
   obtain ⟨u, hu⟩ := u,
+  obtain ⟨x, hx⟩ := x,
   change u x ∈ Φ,
-  -- revert x,
-  -- rintros ⟨x, hx⟩,
   rw mul_action.mem_stabilizer_iff at hu,
-  rw ←mul_action.to_fun_apply at hu,
-  -- have : u ∈ subgroup.closure ((End k V)ˣ) := hu,
-  -- refine subgroup.closure_induction hu _ _ _,
-
-
-
-
-  type_check mul_action.stabilizer (End k V)ˣ Φ,
-  have : ∀ (u : mul_action.stabilizer (End k V)ˣ Φ) (x : Φ), u (x : V) ∈ Φ,
-  { sorry, },
-
-  sorry,
+  replace hu : u '' Φ = Φ := by rwa ← image_smul at hu,
+  rw ←hu,
+  exact mem_image_of_mem u hx,
 end
 
 @[simps]
@@ -209,14 +187,35 @@ lemma unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq
   {Φ : set V} {u : (End k V)ˣ} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤) (hu : u '' Φ ⊆ Φ)
    : is_of_fin_order u :=
 begin
+  replace hu : u '' Φ = Φ,
+  {
+    -- apply subset.antisymm hu,
+    haveI : fintype Φ := finite.fintype hΦ₁,
+    apply set.eq_of_subset_of_card_le hu,
+    have hinj : injective u := (linear_map.general_linear_group.to_linear_equiv u).injective,
+    rw set.card_image_of_injective Φ hinj,
+  },
+  let u' : mul_action.stabilizer (End k V)ˣ Φ := ⟨u, hu⟩,
+  have hu' : is_of_fin_order u ↔ is_of_fin_order u',
+  {
+    suffices : order_of u = order_of u',
+    {
+    -- type_check order_of_pos_iff,
+      -- split,
+      rw ← order_of_pos_iff,
+      have hord : 0 < order_of u ↔ 0 < order_of u' := iff_of_eq (congr_arg (has_lt.lt 0) this),
+      rw [hord, order_of_pos_iff],
+    },
+    rw ←order_of_subgroup u',
+    simp only [subtype.coe_mk],
+  },
+  rw hu',
   suffices : finite (equiv.perm Φ),
   {
     haveI := this,
-    have : finite (mul_action.stabilizer (End k V)ˣ Φ) := _root_.finite.of_injective unit.to_perm' (unit.injective_to_perm' hΦ₂),
-    -- type_check _root_.finite.of_injective _ unit.injective_to_perm',
-    let h1 := order_of_le_card_univ,
-    apply exists_pow_eq_one,
-    sorry,
+    haveI : finite (mul_action.stabilizer (End k V)ˣ Φ) :=
+      _root_.finite.of_injective unit.to_perm' (unit.injective_to_perm' hΦ₂),
+    exact exists_pow_eq_one u',
   },
   haveI : fintype Φ := hΦ₁.fintype,
   exact equiv.finite_left,
