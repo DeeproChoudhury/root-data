@@ -5,7 +5,7 @@ import linear_algebra.quadratic_form.basic
 
 noncomputable theory
 
-open_locale tensor_product big_operators classical
+open_locale tensor_product big_operators classical pointwise
 open set function
 
 @[simp] lemma module.apply_eval_equiv_symm_apply
@@ -108,15 +108,30 @@ begin
   -- rw units.mul_inv_cancel_left,
 end
 
-lemma unit.apply_root_mem {Φ : set V} (u : (End k V)ˣ) (x : Φ) :
+lemma unit.apply_root_mem {Φ : set V} (u : mul_action.stabilizer (End k V)ˣ Φ) (x : Φ) :
   u (x : V) ∈ Φ :=
 begin
-  -- obtain ⟨n, hn⟩ := hΦ.to_finset.mem_image.mp hx,
+  obtain ⟨u, hu⟩ := u,
+  change u x ∈ Φ,
+  -- revert x,
+  -- rintros ⟨x, hx⟩,
+  rw mul_action.mem_stabilizer_iff at hu,
+  rw ←mul_action.to_fun_apply at hu,
+  -- have : u ∈ subgroup.closure ((End k V)ˣ) := hu,
+  -- refine subgroup.closure_induction hu _ _ _,
+
+
+
+
+  type_check mul_action.stabilizer (End k V)ˣ Φ,
+  have : ∀ (u : mul_action.stabilizer (End k V)ˣ Φ) (x : Φ), u (x : V) ∈ Φ,
+  { sorry, },
+
   sorry,
 end
 
 @[simps]
-lemma unit.to_perm {Φ : set V} (u : (End k V)ˣ) :
+def unit.to_perm {Φ : set V} (u : mul_action.stabilizer (End k V)ˣ Φ) :
   equiv.perm Φ :=
 { to_fun := λ x, ⟨u x, unit.apply_root_mem u x⟩,
   inv_fun := λ x, ⟨u⁻¹ x, unit.apply_root_mem u⁻¹ x⟩,
@@ -127,10 +142,6 @@ lemma unit.to_perm {Φ : set V} (u : (End k V)ˣ) :
     apply subtype.eq,
     simp only [subtype.val_eq_coe],
     apply unit.inv_left,
-    -- simp only [←linear_map.mul_apply],
-    -- apply subtype.ext_iff_val.mpr,
-    -- simp,
-    -- change u⁻¹ (u x) = x,
   end,
   right_inv :=
   begin
@@ -142,13 +153,14 @@ lemma unit.to_perm {Φ : set V} (u : (End k V)ˣ) :
   end, }
 
 @[simps]
-def unit.to_perm' {Φ : set V} : ((End k V)ˣ) →* equiv.perm Φ
+def unit.to_perm' {Φ : set V} : (mul_action.stabilizer (End k V)ˣ Φ) →* equiv.perm Φ
 :=
 { to_fun := unit.to_perm,
   map_one' :=
   begin
     ext,
-    simp only [unit.to_perm_apply_coe, coe_End_one, id.def, equiv.perm.coe_one],
+    simp only [unit.to_perm_apply_coe, equiv.perm.coe_one, id.def],
+    refl,
   end,
   map_mul' :=
   begin
@@ -158,21 +170,52 @@ def unit.to_perm' {Φ : set V} : ((End k V)ˣ) →* equiv.perm Φ
     refine linear_map.mul_apply _ _ _,
   end, }
 
-lemma unit.injective_to_perm' {Φ : set V}:
-  injective ((unit.to_perm') : ((End k V)ˣ) → equiv.perm Φ) :=
+lemma unit.injective_to_perm' {Φ : set V} (hΦ : submodule.span k Φ = ⊤):
+  injective ((unit.to_perm') : (mul_action.stabilizer (End k V)ˣ Φ) → equiv.perm Φ) :=
 begin
-  sorry,
+  rw ←monoid_hom.ker_eq_bot_iff,
+  rw eq_bot_iff,
+  intros u hu,
+  rw subgroup.mem_bot,
+  rw monoid_hom.mem_ker at hu,
+  have hu' := fun_like.congr_fun hu,
+  change ∀ x, _ = x at hu',
+  ext v,
+  change u v = v,
+  have := fun_like.congr_fun hu,
+  simp only [unit.to_perm'_apply, equiv.perm.coe_one, id.def, set_coe.forall] at this,
+  have mem1 : v ∈ submodule.span k Φ,
+  { rw hΦ,
+    exact submodule.mem_top, },
+  apply submodule.span_induction mem1,
+  { intros x hx,
+    specialize hu' ⟨x, hx⟩,
+    dsimp [unit.to_perm] at hu',
+    simp at hu',
+    exact hu', },
+  { exact linear_map.map_zero _, },
+  { intros x y hx hy,
+    erw linear_map.map_add,
+    change u x + u y = x + y,
+    rw [hx, hy], },
+  { intros t x hx,
+    erw linear_map.map_smul,
+    change  t • u x = t • x,
+    rw hx, },
 end
 
 -- Like proof of finiteness of weyl group
 lemma unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq
-  {Φ : set V} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤)
-  {u : (End k V)ˣ} (hu : u '' Φ ⊆ Φ) : is_of_fin_order u :=
+  {Φ : set V} {u : (End k V)ˣ} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤) (hu : u '' Φ ⊆ Φ)
+   : is_of_fin_order u :=
 begin
   suffices : finite (equiv.perm Φ),
   {
     haveI := this,
-    type_check finite.of_injective (unit.to_perm') unit.injective_to_perm',
+    have : finite (mul_action.stabilizer (End k V)ˣ Φ) := _root_.finite.of_injective unit.to_perm' (unit.injective_to_perm' hΦ₂),
+    -- type_check _root_.finite.of_injective _ unit.injective_to_perm',
+    let h1 := order_of_le_card_univ,
+    apply exists_pow_eq_one,
     sorry,
   },
   haveI : fintype Φ := hΦ₁.fintype,
@@ -211,7 +254,10 @@ begin
     simpa only [hn₁, smul_eq_zero, nat.cast_eq_zero, hn₀.ne', false_or, or_false, hx,
       eq_zero_or_zero_of_dual_tensor_hom_tmul_eq_zero, sub_eq_zero, self_eq_add_right] using hu, },
   suffices : u '' Φ ⊆ Φ,
-  { exact unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq hΦ₁ hΦ₂ this, },
+  {
+    -- rw ←stabilizer at this,
+    exact unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq hΦ₁ hΦ₂ this,
+  },
   change (to_pre_symmetry x g ∘ to_pre_symmetry x f '' Φ) ⊆ Φ,
   rw [image_comp],
   exact (monotone_image hf₂).trans hg₂,
