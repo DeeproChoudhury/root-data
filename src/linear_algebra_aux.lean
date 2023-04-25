@@ -188,38 +188,26 @@ lemma unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq
    : is_of_fin_order u :=
 begin
   replace hu : u '' Φ = Φ,
-  {
-    -- apply subset.antisymm hu,
-    haveI : fintype Φ := finite.fintype hΦ₁,
+  { haveI : fintype Φ := finite.fintype hΦ₁,
     apply set.eq_of_subset_of_card_le hu,
     have hinj : injective u := (linear_map.general_linear_group.to_linear_equiv u).injective,
-    rw set.card_image_of_injective Φ hinj,
-  },
+    rw set.card_image_of_injective Φ hinj, },
   let u' : mul_action.stabilizer (End k V)ˣ Φ := ⟨u, hu⟩,
   have hu' : is_of_fin_order u ↔ is_of_fin_order u',
-  {
-    suffices : order_of u = order_of u',
-    {
-    -- type_check order_of_pos_iff,
-      -- split,
-      rw ← order_of_pos_iff,
+  { suffices : order_of u = order_of u',
+    { rw ←order_of_pos_iff,
       have hord : 0 < order_of u ↔ 0 < order_of u' := iff_of_eq (congr_arg (has_lt.lt 0) this),
-      rw [hord, order_of_pos_iff],
-    },
+      rw [hord, order_of_pos_iff], },
     rw ←order_of_subgroup u',
-    simp only [subtype.coe_mk],
-  },
+    simp only [subtype.coe_mk], },
   rw hu',
   suffices : finite (equiv.perm Φ),
-  {
-    haveI := this,
+  { haveI := this,
     haveI : finite (mul_action.stabilizer (End k V)ˣ Φ) :=
       _root_.finite.of_injective unit.to_perm' (unit.injective_to_perm' hΦ₂),
-    exact exists_pow_eq_one u',
-  },
+    exact exists_pow_eq_one u', },
   haveI : fintype Φ := hΦ₁.fintype,
   exact equiv.finite_left,
-  -- obtain ⟨n, hn⟩ : ∃ n : ℕ, 0 < n ∧ u ^ n = u⁻¹,
 end
 
 /-- Uniqueness lemma from page 25 of Serre's "Complex semisimple Lie algebras". -/
@@ -253,10 +241,7 @@ begin
     simpa only [hn₁, smul_eq_zero, nat.cast_eq_zero, hn₀.ne', false_or, or_false, hx,
       eq_zero_or_zero_of_dual_tensor_hom_tmul_eq_zero, sub_eq_zero, self_eq_add_right] using hu, },
   suffices : u '' Φ ⊆ Φ,
-  {
-    -- rw ←stabilizer at this,
-    exact unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq hΦ₁ hΦ₂ this,
-  },
+  { exact unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq hΦ₁ hΦ₂ this, },
   change (to_pre_symmetry x g ∘ to_pre_symmetry x f '' Φ) ⊆ Φ,
   rw [image_comp],
   exact (monotone_image hf₂).trans hg₂,
