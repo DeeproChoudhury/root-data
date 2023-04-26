@@ -128,3 +128,19 @@ example : Type := {x : ℕ // x ^ 2 = 4}
 -- begin
 --   unfold nottrueatall,
 -- end
+
+-- Code below is legacy from before we switched from `V ≃ₗ[k] V` to `(End k V)ˣ`
+
+-- lemma unit_inv' {Φ : set V} (hΦ : Φ.finite) (u : (End k V)ˣ) (x : Φ) :
+-- u⁻¹ (u x) = (1 : End k V) x :=
+-- begin
+--   rw ← linear_map.comp_apply,
+-- end
+
+lemma unit.inv_left {Φ : set V} (u : (End k V)ˣ) (x : Φ) :
+  u⁻¹ (u x) = x :=
+(linear_map.general_linear_group.to_linear_equiv u).symm_apply_apply x
+
+lemma unit.inv_right {Φ : set V} (u : (End k V)ˣ) (x : Φ) :
+  u (u⁻¹ x) = x :=
+(linear_map.general_linear_group.to_linear_equiv u).apply_symm_apply x

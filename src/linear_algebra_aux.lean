@@ -23,6 +23,16 @@ end
   ⇑(1 : (module.End k V)ˣ) = id :=
 rfl
 
+@[simp] lemma linear_equiv.coe_one
+  {k V : Type*} [semiring k] [add_comm_monoid V] [module k V] :
+  ⇑(1 : V ≃ₗ[k] V) = id :=
+rfl
+
+@[simp] lemma linear_equiv.coe_mul
+   {k V : Type*} [semiring k] [add_comm_monoid V] [module k V] {e₁ e₂ : V ≃ₗ[k] V} :
+  (↑(e₁ * e₂) : V →ₗ[k] V) = (e₁ : V →ₗ[k] V) * (e₂ : V →ₗ[k] V) :=
+by { ext, simpa, }
+
 attribute [protected] module.finite
 
 namespace module
@@ -56,15 +66,13 @@ end
 
 /-- Given a vector `x` and a linear form `f` such that `f x = 2`, this is the map
 `y ↦ y - (f y) • x`, bundled as a linear automorphism. -/
-def to_symmetry {x : V} {f : dual k V} (h : f x = 2) : units (End k V) :=
-⟨to_pre_symmetry x f, to_pre_symmetry x f, to_pre_symmetry_sq h, to_pre_symmetry_sq h⟩
-
-@[simp] lemma to_symmetry_inv {x : V} {f : dual k V} (h : f x = 2) :
-  (to_symmetry h)⁻¹ = to_symmetry h :=
-begin
-  rw [← mul_left_inj (to_symmetry h), mul_left_inv, ← sq, eq_comm, units.ext_iff],
-  exact to_pre_symmetry_sq h,
-end
+def to_symmetry {x : V} {f : dual k V} (h : f x = 2) : V ≃ₗ[k] V :=
+{ inv_fun := to_pre_symmetry x f,
+  left_inv := λ v, by simp only [linear_map.to_fun_eq_coe, ← linear_map.comp_apply,
+    ← linear_map.mul_eq_comp, ← sq, to_pre_symmetry_sq h, linear_map.id_apply],
+  right_inv := λ v, by simp only [linear_map.to_fun_eq_coe, ← linear_map.comp_apply,
+    ← linear_map.mul_eq_comp, ← sq, to_pre_symmetry_sq h, linear_map.id_apply],
+  .. to_pre_symmetry x f, }
 
 @[simp] lemma eq_zero_or_zero_of_dual_tensor_hom_tmul_eq_zero
   {f : dual k V} {x : V} [no_zero_smul_divisors k V] :
@@ -82,21 +90,7 @@ begin
   { rcases h with rfl | rfl; simp, },
 end
 
--- lemma unit_inv' {Φ : set V} (hΦ : Φ.finite) (u : (End k V)ˣ) (x : Φ) :
--- u⁻¹ (u x) = (1 : End k V) x :=
--- begin
---   rw ← linear_map.comp_apply,
--- end
-
-lemma unit.inv_left {Φ : set V} (u : (End k V)ˣ) (x : Φ) :
-  u⁻¹ (u x) = x :=
-(linear_map.general_linear_group.to_linear_equiv u).symm_apply_apply x
-
-lemma unit.inv_right {Φ : set V} (u : (End k V)ˣ) (x : Φ) :
-  u (u⁻¹ x) = x :=
-(linear_map.general_linear_group.to_linear_equiv u).apply_symm_apply x
-
-lemma unit.apply_root_mem {Φ : set V} (u : mul_action.stabilizer (End k V)ˣ Φ) (x : Φ) :
+lemma unit.apply_root_mem {Φ : set V} (u : mul_action.stabilizer (V ≃ₗ[k] V) Φ) (x : Φ) :
   u (x : V) ∈ Φ :=
 begin
   obtain ⟨u, hu⟩ := u,
@@ -109,7 +103,7 @@ begin
 end
 
 @[simps]
-def unit.to_perm {Φ : set V} (u : mul_action.stabilizer (End k V)ˣ Φ) :
+def unit.to_perm {Φ : set V} (u : mul_action.stabilizer (V ≃ₗ[k] V) Φ) :
   equiv.perm Φ :=
 { to_fun := λ x, ⟨u x, unit.apply_root_mem u x⟩,
   inv_fun := λ x, ⟨u⁻¹ x, unit.apply_root_mem u⁻¹ x⟩,
@@ -119,7 +113,7 @@ def unit.to_perm {Φ : set V} (u : mul_action.stabilizer (End k V)ˣ Φ) :
     simp only [subtype.coe_mk],
     apply subtype.eq,
     simp only [subtype.val_eq_coe],
-    apply unit.inv_left,
+    exact (u : V ≃ₗ[k] V).symm_apply_apply x,
   end,
   right_inv :=
   begin
@@ -127,12 +121,11 @@ def unit.to_perm {Φ : set V} (u : mul_action.stabilizer (End k V)ˣ Φ) :
     simp only [subtype.coe_mk],
     ext,
     simp only [subtype.val_eq_coe],
-    apply unit.inv_right,
+    exact (u : V ≃ₗ[k] V).apply_symm_apply x,
   end, }
 
 @[simps]
-def unit.to_perm' {Φ : set V} : (mul_action.stabilizer (End k V)ˣ Φ) →* equiv.perm Φ
-:=
+def unit.to_perm' {Φ : set V} : (mul_action.stabilizer (V ≃ₗ[k] V) Φ) →* equiv.perm Φ :=
 { to_fun := unit.to_perm,
   map_one' :=
   begin
@@ -145,11 +138,11 @@ def unit.to_perm' {Φ : set V} : (mul_action.stabilizer (End k V)ˣ Φ) →* equ
     intros u₁ u₂,
     ext,
     simp only [unit.to_perm_apply_coe, equiv.perm.coe_mul],
-    refine linear_map.mul_apply _ _ _,
+    refl,
   end, }
 
 lemma unit.injective_to_perm' {Φ : set V} (hΦ : submodule.span k Φ = ⊤):
-  injective ((unit.to_perm') : (mul_action.stabilizer (End k V)ˣ Φ) → equiv.perm Φ) :=
+  injective ((unit.to_perm') : (mul_action.stabilizer (V ≃ₗ[k] V) Φ) → equiv.perm Φ) :=
 begin
   rw ←monoid_hom.ker_eq_bot_iff,
   rw eq_bot_iff,
@@ -171,28 +164,27 @@ begin
     dsimp [unit.to_perm] at hu',
     simp at hu',
     exact hu', },
-  { exact linear_map.map_zero _, },
+  { exact linear_equiv.map_zero _, },
   { intros x y hx hy,
-    erw linear_map.map_add,
+    erw linear_equiv.map_add,
     change u x + u y = x + y,
     rw [hx, hy], },
   { intros t x hx,
-    erw linear_map.map_smul,
+    erw linear_equiv.map_smul,
     change  t • u x = t • x,
     rw hx, },
 end
 
 -- Like proof of finiteness of weyl group
 lemma unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq
-  {Φ : set V} {u : (End k V)ˣ} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤) (hu : u '' Φ ⊆ Φ)
-   : is_of_fin_order u :=
+  {Φ : set V} {u : V ≃ₗ[k] V} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤) (hu : u '' Φ ⊆ Φ) :
+  is_of_fin_order u :=
 begin
   replace hu : u '' Φ = Φ,
   { haveI : fintype Φ := finite.fintype hΦ₁,
     apply set.eq_of_subset_of_card_le hu,
-    have hinj : injective u := (linear_map.general_linear_group.to_linear_equiv u).injective,
-    rw set.card_image_of_injective Φ hinj, },
-  let u' : mul_action.stabilizer (End k V)ˣ Φ := ⟨u, hu⟩,
+    rw set.card_image_of_injective Φ u.injective, },
+  let u' : mul_action.stabilizer (V ≃ₗ[k] V) Φ := ⟨u, hu⟩,
   have hu' : is_of_fin_order u ↔ is_of_fin_order u',
   { suffices : order_of u = order_of u',
     { rw ←order_of_pos_iff,
@@ -203,7 +195,7 @@ begin
   rw hu',
   suffices : finite (equiv.perm Φ),
   { haveI := this,
-    haveI : finite (mul_action.stabilizer (End k V)ˣ Φ) :=
+    haveI : finite (mul_action.stabilizer (V ≃ₗ[k] V) Φ) :=
       _root_.finite.of_injective unit.to_perm' (unit.injective_to_perm' hΦ₂),
     exact exists_pow_eq_one u', },
   haveI : fintype Φ := hΦ₁.fintype,
@@ -222,22 +214,23 @@ begin
   suffices : is_of_fin_order u,
   { have hu : ↑u = linear_map.id + dual_tensor_hom k V V ((f - g) ⊗ₜ x),
     { ext y,
-      simp only [to_symmetry, hg₁, units.coe_mul, units.coe_mk, linear_map.mul_apply, id.def,
-        to_pre_symmetry_apply, map_sub, linear_map.map_smulₛₗ, ring_hom.id_apply, sub_smul, two_smul,
-        linear_map.add_apply, linear_map.id_coe, dual_tensor_hom_apply, linear_map.sub_apply,
-        sub_add_cancel', smul_neg, sub_neg_eq_add],
+      simp only [to_symmetry, hg₁, linear_map.to_fun_eq_coe, linear_equiv.coe_mul,
+        linear_map.mul_apply, linear_equiv.coe_coe, linear_equiv.coe_mk, to_pre_symmetry_apply,
+        linear_equiv.map_sub, linear_equiv.map_smulₛₗ, ring_hom.id_apply, linear_map.add_apply,
+        linear_map.id_coe, id.def, dual_tensor_hom_apply, linear_map.sub_apply, map_sub,
+        sub_add_cancel', smul_neg, sub_neg_eq_add, sub_smul, two_smul],
       abel, },
     replace hu : ∀ (n : ℕ), ↑(u^n) = linear_map.id + (n : k) • dual_tensor_hom k V V ((f - g) ⊗ₜ x),
     { intros n,
       induction n with n ih, { simpa, },
       have aux : (dual_tensor_hom k V V ((f - g) ⊗ₜ[k] x)).comp
         ((n : k) • dual_tensor_hom k V V ((f - g) ⊗ₜ[k] x)) = 0, { ext v, simp [hf₁, hg₁], },
-      rw [pow_succ, units.coe_mul, ih, hu, add_mul, mul_add, mul_add],
+      rw [pow_succ, linear_equiv.coe_mul, ih, hu, add_mul, mul_add, mul_add],
       simp only [linear_map.mul_eq_comp, linear_map.id_comp, linear_map.comp_id, nat.cast_succ,
         aux, add_zero, add_smul, one_smul, add_assoc], },
     obtain ⟨n, hn₀, hn₁⟩ := (is_of_fin_order_iff_pow_eq_one u).mp this,
     specialize hu n,
-    replace hn₁ : ↑(u ^ n) = linear_map.id := units.ext_iff.mp hn₁,
+    replace hn₁ : (↑(u ^ n) : V →ₗ[k] V) = linear_map.id := linear_equiv.to_linear_map_inj.mpr hn₁,
     simpa only [hn₁, smul_eq_zero, nat.cast_eq_zero, hn₀.ne', false_or, or_false, hx,
       eq_zero_or_zero_of_dual_tensor_hom_tmul_eq_zero, sub_eq_zero, self_eq_add_right] using hu, },
   suffices : u '' Φ ⊆ Φ,
@@ -284,7 +277,7 @@ the average to obtain an invariant bilinear form.
 The API for `finsum` should be expanded to interact well with `finite`. This would make the proofs
 below trivial. -/
 def average_bilinear {G : Type*} [group G] [finite G]
-  (ρ : G →* (End k V)ˣ) (B : V →ₗ[k] dual k V) :
+  (ρ : G →* V ≃ₗ[k] V) (B : V →ₗ[k] dual k V) :
   V →ₗ[k] dual k V :=
 { to_fun := λ v, ∑ᶠ g, (B ((ρ g) • v)).comp (ρ g : V →ₗ[k] V),
   map_add' := λ v w,
@@ -300,13 +293,13 @@ def average_bilinear {G : Type*} [group G] [finite G]
     simp only [finsum_eq_sum_of_fintype, ring_hom.id_apply, finset.smul_sum],
     congr,
     ext g w,
-    suffices : ρ g • t • v = t • ρ g • v,
-    { simp only [linear_map.comp_apply, linear_map.smul_apply, map_smul, this], },
-    exact linear_map.map_smul ↑(ρ g) t v,
+    simp only [linear_map.comp_apply, linear_map.smul_apply, map_smul, linear_equiv.smul_def,
+      linear_equiv.map_smulₛₗ, ring_hom.id_apply],
   end, }
 
+
 lemma average_bilinear_apply_apply {G : Type*} [group G] [finite G]
-  (ρ : G →* (End k V)ˣ) (B : V →ₗ[k] dual k V) (v w : V) :
+  (ρ : G →* V ≃ₗ[k] V) (B : V →ₗ[k] dual k V) (v w : V) :
   average_bilinear ρ B v w = ∑ᶠ g, B ((ρ g) • v) ((ρ g) • w) :=
 begin
   haveI : fintype G := fintype.of_finite G,
@@ -316,15 +309,16 @@ end
 
 @[simp] lemma _root_.quadratic_form.comp_pos_def_iff
   {k V : Type*} [linear_ordered_field k] [add_comm_group V] [module k V]
-  (Q : quadratic_form k V) (g : (End k V)ˣ) :
+  (Q : quadratic_form k V) (g : V ≃ₗ[k] V) :
   (Q.comp (g : V →ₗ[k] V)).pos_def ↔ Q.pos_def :=
 begin
-  suffices : ∀ (Q : quadratic_form k V) (g : (End k V)ˣ),
+  suffices : ∀ (Q : quadratic_form k V) (g : V ≃ₗ[k] V),
     Q.pos_def → (Q.comp (g : V →ₗ[k] V)).pos_def,
   { refine ⟨λ hQ,  _, this Q g⟩,
     convert this (Q.comp (g : V →ₗ[k] V)) g⁻¹ hQ,
     ext v,
     simp_rw [quadratic_form.comp_apply, ← linear_map.comp_apply, ← linear_map.mul_eq_comp],
+    change Q v = Q ((g * g⁻¹) v),
     simp, },
   clear Q g, intros Q g hQ v hv,
   replace hv : g v ≠ 0,
@@ -339,7 +333,7 @@ end
 -- Can avoid proving this lemma if we delete `average_bilinear` and just use
 -- `∑ᶠ g, B.to_bilin.to_quadratic_form.comp (ρ g)` instead
 lemma average_bilinear_eq_sum {G : Type*} [group G] [finite G]
-  (ρ : G →* (End k V)ˣ) (B : V →ₗ[k] dual k V) :
+  (ρ : G →* V ≃ₗ[k] V) (B : V →ₗ[k] dual k V) :
   (average_bilinear ρ B).to_bilin.to_quadratic_form =
   ∑ᶠ g, B.to_bilin.to_quadratic_form.comp (ρ g : V →ₗ[k] V) :=
 begin
@@ -354,7 +348,7 @@ begin
 end
 
 @[simp] lemma average_bilinear_smul_smul {G : Type*} [group G] [finite G]
-  (ρ : G →* (End k V)ˣ) (B : V →ₗ[k] dual k V) (v w : V) (g : G) :
+  (ρ : G →* V ≃ₗ[k] V) (B : V →ₗ[k] dual k V) (v w : V) (g : G) :
   average_bilinear ρ B ((ρ g) • v) ((ρ g) • w) = average_bilinear ρ B v w :=
 begin
   simp only [average_bilinear_apply_apply, smul_smul, ← map_mul],
@@ -422,7 +416,7 @@ by just taking the average of a positive definite bilinear form. -/
 lemma exists_to_dual_ker_eq_bot {k V G : Type*}
   [linear_ordered_field k] [add_comm_group V] [module k V] [finite_dimensional k V]
   [group G] [finite G]
-  (ρ : G →* (End k V)ˣ) :
+  (ρ : G →* V ≃ₗ[k] V) :
   ∃ B : V →ₗ[k] dual k V, B.ker = ⊥ ∧ ∀ v w (g : G), B ((ρ g) • v) ((ρ g) • w) = B v w :=
 begin
   obtain ⟨s, ⟨b⟩⟩ := basis.exists_basis k V,
@@ -445,7 +439,7 @@ begin
     rw quadratic_form.comp_pos_def_iff,
     convert b.to_dual_pos_def, },
   { change Q.polar_bilin (ρ g v) (ρ g w) = Q.polar_bilin v w, -- TODO Should be via `simp`
-    sorry, },
+    admit, },
   -/
 end
 

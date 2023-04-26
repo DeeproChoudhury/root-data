@@ -3,6 +3,7 @@ import misc
 
 noncomputable theory
 
+open_locale pointwise
 open set function
 
 /-- A crystallographic root system (possibly non-reduced). -/
@@ -40,7 +41,7 @@ lemma zero_not_mem : (0 : V) ∉ Φ :=
 λ contra, by simpa using h.coroot_apply_self_eq_two ⟨0, contra⟩
 
 /-- The symmetry associated to a root. -/
-def symmetry_of_root (α : Φ) : units (module.End k V) :=
+def symmetry_of_root (α : Φ) : V ≃ₗ[k] V :=
 module.to_symmetry $ h.coroot_apply_self_eq_two α
 
 local notation `ട` := h.symmetry_of_root
@@ -54,7 +55,11 @@ module.to_pre_symmetry_apply (α : V) v (αᘁ)
 module.to_pre_symmetry_apply_self $ h.coroot_apply_self_eq_two α
 
 @[simp] lemma symmetry_of_root_sq (α : Φ) : (ട α)^2 = 1 :=
-units.ext $ module.to_pre_symmetry_sq $ coroot_apply_self_eq_two h α
+begin
+  ext v,
+  have := (module.to_pre_symmetry_sq (coroot_apply_self_eq_two h α)),
+  exact linear_map.congr_fun this v,
+end
 
 protected lemma finite_dimensional : finite_dimensional k V :=
 ⟨⟨h.finite.to_finset, by simpa only [finite.coe_to_finset] using h.span_eq_top⟩⟩
@@ -119,7 +124,7 @@ end
 /-- The Weyl group of a root system. -/
 -- reflections are invertible endomorphisms and sit in the endomorphism ring
 -- i.e. they are all units in the automorphism group
-def weyl_group : subgroup $ (module.End k V)ˣ := subgroup.closure $ range h.symmetry_of_root
+def weyl_group : subgroup (V ≃ₗ[k] V) := subgroup.closure $ range h.symmetry_of_root
 
 @[simp] lemma symmetry_mem_weyl_group (α : Φ) :
   ട α ∈ h.weyl_group :=
@@ -132,13 +137,13 @@ begin
   obtain ⟨w, hw⟩ := w,
   change w • (α : V) ∈ Φ,
   revert α,
-  have : ∀ (g : (module.End k V)ˣ), g ∈ range h.symmetry_of_root → ∀ (α : Φ), g • (α : V) ∈ Φ,
+  have : ∀ (g : V ≃ₗ[k] V), g ∈ range h.symmetry_of_root → ∀ (α : Φ), g • (α : V) ∈ Φ,
   { rintros - ⟨β, rfl⟩ α, exact h.symmetry_of_root_image_subset β ⟨α, α.property, rfl⟩, },
   -- Look up what this means
   refine subgroup.closure_induction hw this _ (λ g₁ g₂ hg₁ hg₂ α, _) (λ g hg α, _),
   { simp, },
   { rw mul_smul, exact hg₁ ⟨_, hg₂ α⟩, },
-  { let e : V ≃ V := ⟨λ x, g • x, λ x, g⁻¹ • x, λ x, by simp, λ x, by simp⟩,
+  { let e : V ≃ V := ⟨λ x, g • x, λ x, g.symm • x, λ x, by simp, λ x, by simp⟩,
     exact e.symm_apply_mem_of_forall_mem_finite hg h.finite α, },
 end
 
@@ -184,13 +189,13 @@ begin
     dsimp [weyl_group_to_perm, (•)] at hw',
     simp at hw',
     exact hw', },
-  { exact linear_map.map_zero _, },
+  { exact linear_equiv.map_zero _, },
   { intros x y hx hy,
-    erw linear_map.map_add,
+    erw linear_equiv.map_add,
     change w x + w y = x + y,
     rw [hx, hy], },
   { intros t x hx,
-    erw linear_map.map_smul,
+    erw linear_equiv.map_smul,
     change t • w x = t • x,
     rw hx, },
 end
