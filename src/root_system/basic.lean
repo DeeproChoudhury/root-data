@@ -141,7 +141,10 @@ def symmetries : subgroup (V ≃ₗ[k] V) := mul_action.stabilizer (V ≃ₗ[k] 
 iff.rfl
 
 lemma finite_symmetries : finite h.symmetries :=
-sorry -- Should follow from `module.finite_stabilizer_of_finite_of_span_eq_top`
+ -- Should follow from `module.finite_stabilizer_of_finite_of_span_eq_top`
+begin
+ apply module.finite_stabilizer_of_finite_of_span_eq_top h.finite h.span_eq_top,
+end
 
 /-- The Weyl group of a root system. -/
 -- reflections are invertible endomorphisms and sit in the endomorphism ring
@@ -149,7 +152,13 @@ sorry -- Should follow from `module.finite_stabilizer_of_finite_of_span_eq_top`
 def weyl_group : subgroup (V ≃ₗ[k] V) := subgroup.closure $ range h.symmetry_of_root
 
 lemma weyl_group_le_symmetries : h.weyl_group ≤ h.symmetries :=
-sorry -- Should be easy via `subgroup.closure_le`
+-- Should be easy via `subgroup.closure_le`
+begin
+  unfold weyl_group,
+  rw subgroup.closure_le h.symmetries,
+  rintros - ⟨α, rfl⟩,
+  exact h.symmetry_of_root_image_eq α,
+end
 
 @[simp] lemma symmetry_mem_weyl_group (α : Φ) :
   ട α ∈ h.weyl_group :=
@@ -262,6 +271,20 @@ lemma symmetry_of_root_apply_of_mem_symmetries (u : V ≃ₗ[k] V) (hu : u ∈ h
 begin
   ext v,
   erw linear_map.mul_apply,
+  rw h.symmetry_of_root_apply,
+  simp only [subtype.coe_mk, linear_equiv.coe_to_linear_map],
+  rw h.symmetry_of_root_apply,
+  -- simp only [subtype.coe_mk, linear_equiv.map_sub, linear_equiv.apply_symm_apply, linear_equiv.map_smulₛₗ, ring_hom.id_apply,
+  -- sub_right_inj],
+  -- congr,
+  -- {
+  --   ext,
+  --   rw [subtype.coe_mk],
+  --   simp,
+
+  --   sorry,
+  -- },
+
   sorry, -- Should follow from API developed above.
 end
 
