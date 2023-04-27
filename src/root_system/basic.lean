@@ -37,8 +37,11 @@ local postfix `ᘁ`:100 := h.coroot
   module.to_pre_symmetry (α : V) (αᘁ) '' Φ ⊆ Φ :=
 (classical.some_spec (h.exists_dual _ α.property)).2
 
+lemma root_ne_zero (α : Φ) : (α : V) ≠ 0 :=
+λ contra, by simpa [contra] using h.coroot_apply_self_eq_two α
+
 lemma zero_not_mem : (0 : V) ∉ Φ :=
-λ contra, by simpa using h.coroot_apply_self_eq_two ⟨0, contra⟩
+λ contra, h.root_ne_zero ⟨0, contra⟩ rfl
 
 /-- The symmetry associated to a root. -/
 def symmetry_of_root (α : Φ) : V ≃ₗ[k] V :=
@@ -121,10 +124,32 @@ begin
   exact ⟨n, by simp⟩,
 end
 
+lemma eq_coroot_of_to_pre_symmetry_image_subseteq (α : Φ) (f : module.dual k V)
+  (hf₁ : f α = 2) (hf₂ : module.to_pre_symmetry (α : V) f '' Φ ⊆ Φ) :
+  f = αᘁ :=
+module.eq_dual_of_to_pre_symmetry_image_subseteq (h.root_ne_zero α) h.finite h.span_eq_top hf₁ hf₂
+  (h.coroot_apply_self_eq_two α) (h.symmetry_of_root_image_subset α)
+
+/-- The group of symmetries of a root system.
+
+TODO: Define equivalences of root systems more generally and thus obtain this as the
+self-equivalences of a single root system. -/
+def symmetries : subgroup (V ≃ₗ[k] V) := mul_action.stabilizer (V ≃ₗ[k] V) Φ
+
+@[simp] lemma mem_symmetries_iff (u : V ≃ₗ[k] V) :
+  u ∈ h.symmetries ↔ u '' Φ = Φ :=
+iff.rfl
+
+lemma finite_symmetries : finite h.symmetries :=
+sorry -- Should follow from `module.finite_stabilizer_of_finite_of_span_eq_top`
+
 /-- The Weyl group of a root system. -/
 -- reflections are invertible endomorphisms and sit in the endomorphism ring
 -- i.e. they are all units in the automorphism group
 def weyl_group : subgroup (V ≃ₗ[k] V) := subgroup.closure $ range h.symmetry_of_root
+
+lemma weyl_group_le_symmetries : h.weyl_group ≤ h.symmetries :=
+sorry -- Should be easy via `subgroup.closure_le`
 
 @[simp] lemma symmetry_mem_weyl_group (α : Φ) :
   ട α ∈ h.weyl_group :=
@@ -154,6 +179,9 @@ def weyl_group_to_perm (w : h.weyl_group) : equiv.perm Φ :=
   left_inv := λ α, by simp,
   right_inv := λ α, by simp, }
 
+/-- TODO (optional) Now that we have the more general version of this used to prove
+`module.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq`, consider reimplementing this as
+`module.unit.to_perm'.comp $ subgroup.inclusion h.weyl_group_le_symmetries`. -/
 @[simps]
 def weyl_group_to_perm' : h.weyl_group →* equiv.perm Φ :=
 { to_fun := h.weyl_group_to_perm,
@@ -167,6 +195,8 @@ def weyl_group_to_perm' : h.weyl_group →* equiv.perm Φ :=
   simp [weyl_group_to_perm, mul_smul],
   end, }
 
+/-- TODO (optional) If we redefine `weyl_group_to_perm'` above then this should be easy using
+`module.unit.injective_to_perm'` and `weyl_group_le_symmetries`. -/
 lemma injective_weyl_group_to_perm : injective h.weyl_group_to_perm' :=
 begin
   rw ←monoid_hom.ker_eq_bot_iff, -- Injective is the same as ker = ⊥
@@ -200,6 +230,9 @@ begin
     rw hx, },
 end
 
+/-- TODO Consider reproving this using just `weyl_group_le_symmetries` and `finite_symmetries`
+above (i.e., the Weyl group is contained in the subgroup of symmetries which is finite and so it
+must be finite). -/
 lemma finite_weyl_group : finite h.weyl_group :=
 begin
   suffices : finite (equiv.perm Φ),
@@ -207,6 +240,29 @@ begin
     exact finite.of_injective _ h.injective_weyl_group_to_perm, },
   haveI : finite Φ := finite_coe_iff.mpr h.finite,
   exact equiv.finite_left,
+end
+
+/-- TODO (optional): use this to golf `is_root_system.coroot_symmetry_apply_eq`. -/
+lemma coroot_apply_of_mem_symmetries (u : V ≃ₗ[k] V) (hu : u ∈ h.symmetries) (α : Φ) (h') :
+  ⟨u α, h'⟩ᘁ = u.symm.dual_map (αᘁ) :=
+begin
+  have h₀ : u '' Φ = Φ := hu,
+  have h₁ : u.symm '' Φ = Φ, { conv_lhs { rw [← h₀, ← image_comp], }, simp, },
+  refine (h.eq_coroot_of_to_pre_symmetry_image_subseteq ⟨u α, h'⟩ _ _ _).symm,
+  { simp, },
+  { have : module.to_pre_symmetry (u α) (u.symm.dual_map (αᘁ)) = u * (ട α) * u.symm,
+    { ext v, simp [h.symmetry_of_root_apply], },
+    rw [subtype.coe_mk, this, linear_map.mul_eq_comp, linear_map.mul_eq_comp, linear_map.coe_comp,
+      linear_map.coe_comp, image_comp, image_comp, linear_equiv.coe_coe, linear_equiv.coe_coe,
+      linear_equiv.coe_coe, h₁, h.symmetry_of_root_image_eq α, h₀], },
+end
+
+lemma symmetry_of_root_apply_of_mem_symmetries (u : V ≃ₗ[k] V) (hu : u ∈ h.symmetries) (α : Φ) (h') :
+  ട ⟨u α, h'⟩ = u * (ട α) * u.symm :=
+begin
+  ext v,
+  erw linear_map.mul_apply,
+  sorry, -- Should follow from API developed above.
 end
 
 end is_root_system

@@ -175,9 +175,16 @@ begin
     rw hx, },
 end
 
--- Like proof of finiteness of weyl group
-lemma unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq
-  {Φ : set V} {u : V ≃ₗ[k] V} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤) (hu : u '' Φ ⊆ Φ) :
+lemma finite_stabilizer_of_finite_of_span_eq_top
+  {Φ : set V} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤) :
+  finite (mul_action.stabilizer (V ≃ₗ[k] V) Φ) :=
+begin
+  haveI : fintype Φ := hΦ₁.fintype,
+  exact _root_.finite.of_injective unit.to_perm' (unit.injective_to_perm' hΦ₂),
+end
+
+lemma is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq
+  {Φ : set V} (hΦ₁ : Φ.finite) (hΦ₂ : submodule.span k Φ = ⊤) {u : V ≃ₗ[k] V} (hu : u '' Φ ⊆ Φ) :
   is_of_fin_order u :=
 begin
   replace hu : u '' Φ = Φ,
@@ -193,13 +200,8 @@ begin
     rw ←order_of_subgroup u',
     simp only [subtype.coe_mk], },
   rw hu',
-  suffices : finite (equiv.perm Φ),
-  { haveI := this,
-    haveI : finite (mul_action.stabilizer (V ≃ₗ[k] V) Φ) :=
-      _root_.finite.of_injective unit.to_perm' (unit.injective_to_perm' hΦ₂),
-    exact exists_pow_eq_one u', },
-  haveI : fintype Φ := hΦ₁.fintype,
-  exact equiv.finite_left,
+  haveI := finite_stabilizer_of_finite_of_span_eq_top hΦ₁ hΦ₂,
+  exact exists_pow_eq_one u',
 end
 
 /-- Uniqueness lemma from page 25 of Serre's "Complex semisimple Lie algebras". -/
@@ -234,7 +236,7 @@ begin
     simpa only [hn₁, smul_eq_zero, nat.cast_eq_zero, hn₀.ne', false_or, or_false, hx,
       eq_zero_or_zero_of_dual_tensor_hom_tmul_eq_zero, sub_eq_zero, self_eq_add_right] using hu, },
   suffices : u '' Φ ⊆ Φ,
-  { exact unit.is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq hΦ₁ hΦ₂ this, },
+  { exact is_of_fin_order_of_finite_of_span_eq_top_of_image_subseteq hΦ₁ hΦ₂ this, },
   change (to_pre_symmetry x g ∘ to_pre_symmetry x f '' Φ) ⊆ Φ,
   rw [image_comp],
   exact (monotone_image hf₂).trans hg₂,
