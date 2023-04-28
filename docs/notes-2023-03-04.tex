@@ -78,7 +78,7 @@ Now if $\alpha$ and $\beta$ are two roots of some root system then $s_\alpha(\be
 is another root and thus has a coroot $(s_\alpha(\beta))^*$. In order to show that the set of
 coroots form a root system in $V^*$ we need to calculate this coroot in terms of the coroots
 $\alpha^*$ and $\beta^*$. The following lemma gives the answer:
-\begin{lemma}[\texttt{is\_root\_system.coroot\_symmetry\_apply\_eq}]
+\begin{lemma}[\texttt{is\_root\_system.coroot\_symmetry\_apply\_eq}]\label{coroot_symmetry_apply_eq}
   Let $\Phi$ be a root system for $V$ over $k$ and let $\alpha, \beta \in \Phi$ be a roots, then:
   \begin{align*}
     (s_\alpha(\beta))^* = \beta^* - (\beta^*(\alpha))\alpha^*.
@@ -190,6 +190,81 @@ $\alpha^*$ and $\beta^*$. The following lemma gives the answer:
   for all $\alpha \in \Phi$.
 
   Since the roots span $V$ and $B$ is non-singular, we must have $v = 0$ as required.
+\end{proof}
+
+\section{Bilinear forms}
+\begin{definition}
+  A root system $\Phi$ in a vector space $V$ over a field $k$, induces a bilinear form on $V$
+  as follows:
+  \begin{align*}
+    B_\Phi : V \times V &\to k,\\
+    (v, w) &\mapsto \sum_{\alpha \in \Phi}\alpha^*(v)\alpha^*(w).
+  \end{align*}
+\end{definition}
+
+\begin{lemma}
+  Let $B_\Phi$ be the bilinear form associated to a root system $\Phi$ in a vector space $V$ over an
+  ordered field $k$. Then $B_\Phi$ has the following properties:
+  \begin{enumerate}[(i)]
+    \item it is symmetric\label{bilin_form_symm},
+    \item it is positive definite\label{bilin_form_pos_def},
+    \item it is invariant under the group of symmetries of the root system\label{bilin_form_invt},
+    \item given $\alpha \in \Phi$:
+    \begin{align*}
+      \langle\alpha\rangle^{\perp} = \ker \alpha^*,
+    \end{align*}
+    where $\langle\alpha\rangle^{\perp}$ is the orthogonal complement of $\alpha$ wrt
+    $B_\Phi$\label{bilin_form_othog_compl}.
+  \end{enumerate}
+\end{lemma}
+\begin{proof}
+  Claim \eqref{bilin_form_symm} is clear.
+
+  Claim \eqref{bilin_form_pos_def} follows because the coroots span $V^*$. More precisely, since
+  they span, given any non-zero $v$ in $V$, there must exist some $\beta \in \Phi$ such that:
+  \begin{align*}
+    \beta^*(v) \ne 0.
+  \end{align*}
+  We then have:
+  \begin{align*}
+    0 &< \beta^*(v)^2\\
+      &\le \sum_{\alpha \in \Phi}(\alpha^*(v))^2\\
+      &= B_\Phi(v, v)
+  \end{align*}
+  as required.
+
+  For claim \eqref{bilin_form_invt}, let $u : V \to V$ be a linear automorphism preserving $\Phi$.
+  Note that for any $\alpha \in \Phi$ we have the following generalisation of lemma
+  \ref{coroot_symmetry_apply_eq} (this is essentially
+  \texttt{is\_root\_system.coroot\_apply\_of\_mem\_symmetries} in the Lean code except with $u^{-1}$
+  instead of $u$):
+  \begin{align*}
+    u^*(\alpha^*) = (u^{-1}(\alpha))^*,
+  \end{align*}
+  where $u^* : V^* \to V^*$ is the transpose of $u : V \to V$. Given any $v$, $w$ in $V$ we thus
+  calculate:
+  \begin{align*}
+    B_\Phi(u(v), u(w)) &= \sum_{\alpha \in \Phi}\alpha^*(u(v))\alpha^*(u(w))\\
+                       &= \sum_{\alpha \in \Phi}(u^*(\alpha^*))(v)(u^*(\alpha^*))(w)\\
+                       &= \sum_{\alpha \in \Phi}(u^{-1}(\alpha))^*(v)(u^{-1}(\alpha))^*(w)\\
+                       &= \sum_{\alpha \in u^{-1}(\Phi)}\alpha^*(v)\alpha^*(w)\\
+                       &= \sum_{\alpha \in \Phi}\alpha^*(v)\alpha^*(w)\\
+                       &= B_\Phi(v, w)
+  \end{align*}
+  as required.
+
+  For claim \eqref{bilin_form_othog_compl} note that by taking $u = s_\alpha$ in part
+  \eqref{bilin_form_invt}, for any $v$ in $V$ we have:
+  \begin{align*}
+    B_\Phi(\alpha, v) &= B_\Phi(s_\alpha(\alpha), s_\alpha(v))\\
+                      &= B_\Phi(-\alpha, v - \alpha^*(v)\alpha)\\
+                      &= -B_\Phi(\alpha, v) + \alpha^*(v)B_\Phi(\alpha, \alpha)\\
+  \end{align*}
+  And thus:
+  \begin{align*}
+    \alpha^*(v) = 2\frac{B_\Phi(\alpha, v)}{B_\Phi(\alpha, \alpha)},
+  \end{align*}
+  from which the claim follows.
 \end{proof}
 
 \bibliographystyle{plain}
