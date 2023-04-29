@@ -272,8 +272,21 @@ begin
   ext v,
   erw linear_map.mul_apply,
   rw h.symmetry_of_root_apply,
+  rw coroot_apply_of_mem_symmetries,
   simp only [subtype.coe_mk, linear_equiv.coe_to_linear_map],
   rw h.symmetry_of_root_apply,
+  simp only [linear_equiv.map_sub, linear_equiv.apply_symm_apply, linear_equiv.map_smulₛₗ,
+  ring_hom.id_apply, sub_right_inj],
+  congr,
+  {
+    exact hu,
+    -- ext,
+    -- rw subtype.coe_mk,
+    -- rw mem_symmetries_iff at hu,
+    -- type_check coroot_apply_of_mem_symmetries h u hu α h', },
+    -- rw coroot_apply_of_mem_symmetries,
+    -- simp,
+  },
   -- simp only [subtype.coe_mk, linear_equiv.map_sub, linear_equiv.apply_symm_apply, linear_equiv.map_smulₛₗ, ring_hom.id_apply,
   -- sub_right_inj],
   -- congr,
@@ -284,8 +297,10 @@ begin
 
   --   sorry,
   -- },
-
-  sorry, -- Should follow from API developed above.
+ -- Should follow from API developed above.
 end
+
+example (u : V ≃ₗ[k] V) (hu : u ∈ h.symmetries) (α : Φ) (h' : u α ∈ Φ) (v : V)
+ (hu : u '' Φ = Φ) : u α = α := sorry
 
 end is_root_system
