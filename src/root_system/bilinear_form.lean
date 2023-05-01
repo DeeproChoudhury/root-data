@@ -8,6 +8,8 @@ open set function
 
 namespace is_root_system
 
+-- Need ordering of scalars to have concept of positive definiteness which we will use in proofs
+-- below
 variables {k V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
 variables {Φ : set V} (h : is_root_system k Φ)
 include h
@@ -74,9 +76,39 @@ sorry
 -- In a Euclidean space we have concept of orthogonality and therefore of reflections
 -- Reflections automatically have this property, but we started with weaker assumptions
 -- Estimate medium effort.
-@[simp] lemma to_bilin_form_weyl_eq (g : h.weyl_group) (x y : V) :
-  h.to_bilin_form (g • x) (g • y) = h.to_bilin_form x y :=
+@[simp] lemma to_bilin_form_weyl_eq (u : V ≃ₗ[k] V) (hu : u ∈ h.symmetries) (x y : V) :
+  h.to_bilin_form (u • x) (u • y) = h.to_bilin_form x y :=
 begin
+  have hu' : u.symm ∈ h.symmetries := inv_mem_iff.mpr hu,
+  have hα : ∀ (α : Φ), u.symm α ∈ Φ,
+  {
+    --have h : u '' Φ ⊆ Φ → ∀ (α : V), α ∈ Φ → u α ∈ Φ := by library_search,
+    rw [mem_symmetries_iff] at hu',
+    intros α,
+    apply eq.subset hu',
+    exact ⟨α, α.2, rfl⟩,
+
+    -- rw [← hu],
+    -- rw [mem_image],
+    -- use α,
+    -- simpa only [mem_image, embedding_like.apply_eq_iff_eq, exists_eq_right],
+    },
+  let u' := u.dual_map,
+  have h' : ∀ (α : Φ), u.dual_map (h.coroot α) = h.coroot ⟨u.symm α, hα α⟩,
+  {
+    intros α,
+    rw [coroot_apply_of_mem_symmetries h u.symm hu' α (hα α), linear_equiv.symm_symm],
+  },
+  change h.to_dual (u • x) (u • y) = _,
+  rw [to_dual_apply_apply],
+  dsimp only [has_smul.smul],
+
+  simp_rw [← linear_equiv.dual_map_apply, h'],
+  --type_check finsum_set_coe_eq_finsum_mem Φ,
+  rw [@finsum_set_coe_eq_finsum_mem V (module.dual k V) _ (λ α', ⇑(h.coroot ⟨⇑(u.symm) α', _⟩) x * ⇑(h.coroot ⟨⇑(u.symm) α', _⟩) y) Φ],
+  --simp_rw [← linear_map.dual_map_apply],
+
+  --type_check coroot_apply_of_mem_symmetries h u⁻¹ hu' _  hα,
   sorry,
 end
 
