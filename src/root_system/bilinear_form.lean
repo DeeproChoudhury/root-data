@@ -78,7 +78,7 @@ sorry
 -- In a Euclidean space we have concept of orthogonality and therefore of reflections
 -- Reflections automatically have this property, but we started with weaker assumptions
 -- Estimate medium effort.
-@[simp] lemma to_bilin_form_weyl_eq (u : V ≃ₗ[k] V) (hu : u ∈ h.symmetries) (x y : V) :
+@[simp] lemma to_bilin_form_symmetry_eq (u : V ≃ₗ[k] V) (hu : u ∈ h.symmetries) (x y : V) :
   h.to_bilin_form (u • x) (u • y) = h.to_bilin_form x y :=
 begin
   have hu' : u.symm ∈ h.symmetries := inv_mem_iff.mpr hu,
@@ -108,6 +108,15 @@ begin
   change ∑ᶠ (i : Φ), (h.coroot i) x • (h.coroot i) y = _,
   rw ← to_dual_apply_apply,
   refl,
+end
+
+lemma to_bilin_form_weyl_eq (g : V ≃ₗ[k] V) (hg : g ∈ h.weyl_group) (x y : V) :
+  h.to_bilin_form (g • x) (g • y) = h.to_bilin_form x y :=
+begin
+  have hg' : g ∈ h.symmetries,
+  { apply weyl_group_le_symmetries,
+    exact hg, },
+  apply to_bilin_form_symmetry_eq h g hg',
 end
 
 -- Estimate high effort.
