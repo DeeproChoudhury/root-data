@@ -1,6 +1,7 @@
 import root_system.dual
 import linear_algebra.bilinear_form
 import data.set.function
+import tactic.field_simp
 
 noncomputable theory
 
@@ -11,7 +12,7 @@ namespace is_root_system
 
 -- Need ordering of scalars to have concept of positive definiteness which we will use in proofs
 -- below
-variables {k V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
+variables {k V : Type*} [linear_ordered_field k] [char_zero k] [add_comm_group V] [module k V]
 variables {Φ : set V} (h : is_root_system k Φ)
 include h
 
@@ -65,9 +66,31 @@ def to_bilinear_map : V →ₗ[k] V →ₗ[k] k :=
 /-- The bilinear form on `V` induced by a root system. -/
 def to_bilin_form : bilin_form k V := h.to_bilinear_map.to_bilin
 
+-- Don't have any zeros or -1s in the matrix only over the real numbers
+lemma to_bilin_form_anisotropic : h.to_bilin_form.to_quadratic_form.anisotropic :=
+begin
+  apply quadratic_form.pos_def.anisotropic,
+  intros v hv,
+  simp only [to_bilin_form, to_bilinear_map, bilin_form.to_quadratic_form_apply, linear_map.mk_coe],
+  change 0 < h.to_dual v v,
+  rw to_dual_apply_apply,
+  replace hv : ∃ (β : Φ), βᘁ v ≠ 0,
+  {
+    -- should follow from fact that the coroots span
+    sorry, },
+  obtain ⟨β, hβ⟩ := hv,
+  replace hβ : 0 < (βᘁ v) * (βᘁ v),
+  {
+    exact mul_self_pos.mpr hβ,},
+  sorry,
+end
+
+#exit
+
 /-- This corresponds to the bilinear form on V induced by the root system being nonsingular -/
-lemma ker_to_dual_eq_bot : h.to_dual.ker = ⊥ :=
-sorry
+lemma ker_to_dual_eq_bot : h.to_bilin_form.nondegenerate :=
+bilin_form.nondegenerate_of_anisotropic h.to_bilin_form_anisotropic
+
 
 --set_option pp.implicit true
 --set_option pp.notation false
@@ -119,27 +142,44 @@ begin
   apply to_bilin_form_symmetry_eq h g hg',
 end
 
+
+#check @mul_div_cancel
 -- Estimate high effort.
 lemma to_bilin_form_orthogonal_eq_ker (α : Φ) :
   h.to_bilin_form.orthogonal (k ∙ (α : V)) = (αᘁ).ker :=
 begin
-  suffices : ∀ (v : V), (h.coroot α) v = 2 * h.to_bilin_form α v / h.to_bilin_form α α,
+  have hα' : h.to_bilin_form α α ≠ 0,
   {
-    have hb : ∀ (v : V), h.to_bilin_form α v = 0 ↔ (αᘁ) v = 0,
+    have h' := h.to_bilin_form_anisotropic,
+    contrapose! h',
+    rw quadratic_form.not_anisotropic_iff_exists,
+    exact ⟨α, h.root_ne_zero α, h'⟩,
+  },
+  suffices : ∀ (v : V), (h.coroot α) v = 2 * h.to_bilin_form α v / h.to_bilin_form α α,
+  { have hb : ∀ (v : V), h.to_bilin_form α v = 0 ↔ (αᘁ) v = 0,
     { intros v,
       -- rw [← bilin_form.mem_orthogonal_iff, ← submodule.mem_bot, ← this],
       -- simp only [submodule.mem_bot, submodule.mem_span_singleton, bilin_form.mem_orthogonal_iff],
-      split,
-      { intros h,
-        rw this,
-        rw h,
+      refine ⟨λ hbα, _, λ hbα, _⟩,
+      { rw this,
+        rw hbα,
         rw mul_zero,
         exact zero_div _, },
-      { intros h,
-        specialize this v,
-        rw h at this,
+      { specialize this v,
+        rw hbα at this,
         -- rw eq_div_iff_mul_eq' at this,
-        sorry,
+
+        rw [eq_comm, div_eq_zero_iff] at this,
+        cases this,
+        { simpa only [mul_eq_zero, bit0_eq_zero, one_ne_zero, false_or] using this,},
+        { contradiction, },
+
+        -- have hbb : 0 = 2 * (h.to_bilin_form) α v,
+        -- {
+        --   --rw div_eq_zero_iff att ,
+        --   sorry, },
+        -- norm_num at hbb,
+        -- exact hbb,
       }, },
     ext v,
     rw bilin_form.mem_orthogonal_iff,
@@ -151,15 +191,13 @@ begin
       rw h,
       rw submodule.mem_span,
       simp only [singleton_subset_iff, set_like.mem_coe, imp_self, forall_const], },
-    {
-      intros n hn,
+    { intros n hn,
       rw submodule.mem_span_singleton at hn,
       rcases hn with ⟨z, rfl⟩,
-      simp,
+      simp only [bilin_form.smul_left, mul_eq_zero],
       refine or.intro_right _ _,
       rw hb,
-      exact h, },
-  },
+      exact h, }, },
   intro v,
   let u := h.symmetry_of_root α,
   have hu : u ∈ h.symmetries,
@@ -182,20 +220,8 @@ begin
   },
   rw eq_sub_iff_add_eq at hu',
   rw ← two_mul at hu',
-  rw @div_eq_iff_eq_mul k (field.to_comm_ring k) (2 * (h.to_bilin_form) α v) ((h.coroot α) v) ((h.to_bilin_form) α α) at hu',
-  -- change (h.coroot α) v = 2 * h.to_bilin_form α v / h.to_bilin_form α α at hu',
-  -- rw div_eq_of_eq_mul'' hu' at hu',
-  -- have : ∀ (a b : ℕ), a = b - a ↔ 2 * a = b,
-  -- { library_search, },
-  sorry,
-end
-
-theorem ex {G : Type*} [comm_group G] (a b c d : G) :
-a * b = c * d ↔ (a * b) / d = c:=
-begin
-  type_check @div_eq_iff_eq_mul G _ a b c,
-  exact div_eq_iff_eq_mul.symm,
-  sorry,
+  rw hu',
+  rw mul_div_cancel _ hα',
 end
 
 end is_root_system
