@@ -59,7 +59,7 @@ begin
   exact ⟨B, hB₁, λ v w α, hB₂ v w ⟨ട α, h.symmetry_mem_weyl_group α⟩⟩,
 end
 
-lemma bar : ∀ (v : V) (h' : ∀ (α : Φ), h.coroot α v = 0), v = 0 :=
+lemma coroot_eq_zero_only_if_v_eq_zero : ∀ (v : V) (h' : ∀ (α : Φ), h.coroot α v = 0), v = 0 :=
 begin
   intros v hv,
   obtain ⟨B, h1, h2⟩ := h.exists_to_dual_ker_eq_bot_forall,
@@ -108,7 +108,7 @@ begin
     refine ⟨h.coroot α, _, rfl⟩,
     apply submodule.subset_span,
     exact mem_range_self α,},
-  exact h.bar,
+  exact h.coroot_eq_zero_only_if_v_eq_zero,
   -- intros v hv,
   -- obtain ⟨B, h1, h2⟩ := h.exists_to_dual_ker_eq_bot_forall,
   -- replace hv : ∀ α, ട α v = v,
