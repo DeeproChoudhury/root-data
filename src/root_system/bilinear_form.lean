@@ -1,7 +1,6 @@
 import root_system.dual
 import linear_algebra.bilinear_form
 import data.set.function
-import tactic.field_simp
 
 noncomputable theory
 
@@ -77,15 +76,18 @@ begin
   replace hv : ∃ (β : Φ), βᘁ v ≠ 0,
   {
     -- should follow from fact that the coroots span
-    sorry, },
+    contrapose! hv,
+    exact h.bar v hv,
+    -- haveI : finite Φ := finite_coe_iff.mpr h.finite,
+    -- have h2 : (support (λ (α : ↥Φ), (αᘁ) v)).finite, by apply set.to_finite,
+   },
   obtain ⟨β, hβ⟩ := hv,
   replace hβ : 0 < (βᘁ v) * (βᘁ v),
-  {
-    exact mul_self_pos.mpr hβ,},
+  {exact mul_self_pos.mpr hβ,},
   sorry,
 end
 
-#exit
+
 
 /-- This corresponds to the bilinear form on V induced by the root system being nonsingular -/
 lemma ker_to_dual_eq_bot : h.to_bilin_form.nondegenerate :=
@@ -114,7 +116,9 @@ begin
   have h' : ∀ (α : Φ), u.dual_map (h.coroot α) = h.coroot ⟨u.symm α, hα α⟩,
   { intros α,
     rw [coroot_apply_of_mem_symmetries h u.symm hu' α (hα α), linear_equiv.symm_symm], },
-  change h.to_dual (u • x) (u • y) = _,
+  have foo : ∀ a b, h.to_dual a b = h.to_bilin_form a b, intros, refl,
+  rw ←foo,
+  --change h.to_dual (u • x) (u • y) = _,
   rw [to_dual_apply_apply],
   dsimp only [has_smul.smul],
   simp_rw [← linear_equiv.dual_map_apply, h'],
@@ -143,7 +147,6 @@ begin
 end
 
 
-#check @mul_div_cancel
 -- Estimate high effort.
 lemma to_bilin_form_orthogonal_eq_ker (α : Φ) :
   h.to_bilin_form.orthogonal (k ∙ (α : V)) = (αᘁ).ker :=
