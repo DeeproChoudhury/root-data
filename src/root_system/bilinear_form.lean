@@ -81,34 +81,20 @@ begin
   replace hβ : 0 < (βᘁ v) * (βᘁ v),
   {exact mul_self_pos.mpr hβ,},
   haveI : finite Φ := finite_coe_iff.mpr h.finite,
-  -- have h2 :∑ᶠ λ (α : ↥Φ), (h.coroot α) v • ⇑(h.coroot α) v,
-  -- {
-  --   apply
-  -- },
   have h2 : (support (λ (i : ↥Φ), (h.coroot i) v • (h.coroot i) v)).finite,
   { apply set.to_finite, },
   replace hβ : 0 < ∑ᶠ (α : Φ), (αᘁ v) * (αᘁ v),
-  {
-    refine lt_of_lt_of_le hβ _,
-    -- type_check @finsum_eq_sum _ _ _ _ h2,
+  { refine lt_of_lt_of_le hβ _,
     rw finsum_eq_sum (λ (i : ↥Φ), (h.coroot i) v * (h.coroot i) v) h2,
-    {
-      -- type_check @finset.single_le_sum _ _ _ _ h2.to_finset,
-      refine @finset.single_le_sum Φ k _ ((λ (i : ↥Φ), (h.coroot i) v * (h.coroot i) v)) h2.to_finset _ _ _,
-      {
-        intros i hi,
-        simp,
-        exact mul_self_nonneg _,
-      },
-      {
-        rw set.finite.mem_to_finset,
+    { refine @finset.single_le_sum Φ k
+        _ ((λ (i : ↥Φ), (h.coroot i) v * (h.coroot i) v)) h2.to_finset _ _ _,
+      { intros i hi,
+        simp only,
+        exact mul_self_nonneg _, },
+      { rw set.finite.mem_to_finset,
         rw mem_support,
-        simpa only [algebra.id.smul_eq_mul, ne.def, mul_eq_zero, or_self, mul_self_pos] using hβ,
-      },
-      -- simp only,
-      -- convert finset.single_le_sum _ _,
-    },
-  },
+        simpa only [algebra.id.smul_eq_mul, ne.def,
+          mul_eq_zero, or_self, mul_self_pos] using hβ,},},},
   exact hβ,
 end
 
