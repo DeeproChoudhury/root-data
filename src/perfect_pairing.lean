@@ -1,4 +1,5 @@
 import linear_algebra.dual
+import linear_algebra_aux
 
 noncomputable theory
 
@@ -140,5 +141,30 @@ of_is_reflexive' $ eval_equiv' R M
 end perfect_pairing
 
 end perfect_pairing
+
+namespace is_root_datum
+
+-- variables [is_reflexive R M] (p : perfect_pairing R M (dual R M)) (X : Type*) [add_comm_group X] [module ℤ X]
+-- [is_reflexive ℤ X] [n : perfect_pairing ℤ X (dual ℤ X)]
+
+variables (X Y : Type*) [add_comm_group X] [add_comm_group Y] (p : perfect_pairing ℤ X Y)
+[module.free ℤ X] [module.free ℤ Y] [module.finite ℤ X] [module.finite ℤ Y] (Φ : set X) (Ψ : set Y)
+-- example : module ℤ X := add_comm_group.int_module X
+
+-- Would be a bit less useful because it would force the coroots to live in the dual
+-- Perfect pairing gives isomorphism to dual, but not equality. We don't always want to force the
+-- 2nd space to be the dual because it might just be another additive group (ℤ-module).
+example : perfect_pairing ℤ X (dual ℤ X) := perfect_pairing.of_is_reflexive ℤ X
+
+structure is_root_pairing (e : Φ ≃ Ψ) : Prop :=
+(perfect_pairing_eq_two : ∀ α : Φ, p.to_equiv' (e α : Y) α = 2)
+(foo : ∀ α : Φ, module.to_pre_symmetry (α : X) (p.to_equiv' (e α : Y)) '' Φ ⊆ Φ)
+(foo' : ∀ α : Ψ, module.to_pre_symmetry (α : Y) (p.to_equiv (e.symm α : X)) '' Ψ ⊆ Ψ)
+
+class is_root_datum : Prop :=
+(finite : Φ.finite)
+(exists_equiv : ∃ e : Φ ≃ Ψ, is_root_pairing X Y p Φ Ψ e)
+
+end is_root_datum
 
 end module

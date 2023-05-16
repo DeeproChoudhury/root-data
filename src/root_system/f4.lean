@@ -29,6 +29,16 @@ begin
   intro h,
   left,
   assume q hq,
+  obtain ⟨n, rfl⟩ := hq,
+  apply set.mem_Inter.mpr (λ hn, _),
+  apply hn,
+  simp,
+  right,
+  sorry,
+
+
+
+
   -- { intro h,
   --   have : q ∈ add_subgroup.closure {s, e₂, e₃, e₄} := h,
   --   rw add_subgroup.mem_closure_iff at this,
@@ -53,6 +63,7 @@ def f4_root_system : set (ℍ[ℝ]) := {q : ℍ[ℝ] | ‖q‖^2 ≤ 2 ∧ q ∈
 lemma is_root_system_f4_root_system : is_root_system ℝ f4_root_system :=
 { finite :=
   begin
+    constructor,
     sorry,
   end,
   span_eq_top :=

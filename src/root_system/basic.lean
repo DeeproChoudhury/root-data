@@ -204,6 +204,19 @@ def weyl_group_to_perm' : h.weyl_group →* equiv.perm Φ :=
   simp [weyl_group_to_perm, mul_smul],
   end, }
 
+def weyl_group_to_perm'' : h.weyl_group →* equiv.perm Φ :=
+module.unit.to_perm'.comp $ subgroup.inclusion h.weyl_group_le_symmetries
+
+/-- TODO (optional) If we redefine `weyl_group_to_perm'` above then this should be easy using
+`module.unit.injective_to_perm'` and `weyl_group_le_symmetries`. -/
+lemma injective_weyl_group_to_perm' : injective h.weyl_group_to_perm'' :=
+begin
+  refine @module.unit.injective_to_perm' _ _ _ _ _ _ _,
+  type_check weyl_group_le_symmetries h,
+  type_check module.unit.injective_to_perm' h.span_eq_top,
+  sorry,
+end
+
 /-- TODO (optional) If we redefine `weyl_group_to_perm'` above then this should be easy using
 `module.unit.injective_to_perm'` and `weyl_group_le_symmetries`. -/
 lemma injective_weyl_group_to_perm : injective h.weyl_group_to_perm' :=
@@ -239,16 +252,33 @@ begin
     rw hx, },
 end
 
+example (G : Type*) [group G] (H : subgroup G) [finite G]: finite H :=
+begin
+  refine subgroup.finite H,
+end
+
+-- example (G : Type*) (H : Type*) [group G] [group H] (h : H ≤ G) [finite G]: finite H := sorry
+
 /-- TODO Consider reproving this using just `weyl_group_le_symmetries` and `finite_symmetries`
 above (i.e., the Weyl group is contained in the subgroup of symmetries which is finite and so it
 must be finite). -/
+-- We should really be using `subgroup.of_le` but this is not present in mathlib (analogous to
+-- `submodule.of_le`)
 lemma finite_weyl_group : finite h.weyl_group :=
 begin
-  suffices : finite (equiv.perm Φ),
-  { haveI := this,
-    exact finite.of_injective _ h.injective_weyl_group_to_perm, },
-  haveI : finite Φ := finite_coe_iff.mpr h.finite,
-  exact equiv.finite_left,
+  suffices : finite (h.symmetries),
+  {
+    let f : h.weyl_group → h.symmetries := λ x, ⟨x, h.weyl_group_le_symmetries x.property⟩,
+    have hf : injective f := by { rintros ⟨x, hx⟩ ⟨y, hy⟩ hxy, simpa using hxy, },
+    haveI := this,
+    exact finite.of_injective f hf,
+  },
+  apply finite_symmetries,
+  -- suffices : finite (equiv.perm Φ),
+  -- { haveI := this,
+  --   exact finite.of_injective _ h.injective_weyl_group_to_perm, },
+  -- haveI : finite Φ := finite_coe_iff.mpr h.finite,
+  -- exact equiv.finite_left,
 end
 
 /-- TODO (optional): use this to golf `is_root_system.coroot_symmetry_apply_eq`. -/
