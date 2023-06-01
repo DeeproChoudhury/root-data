@@ -136,6 +136,39 @@ TODO: Define equivalences of root systems more generally and thus obtain this as
 self-equivalences of a single root system. -/
 def symmetries : subgroup (V ≃ₗ[k] V) := mul_action.stabilizer (V ≃ₗ[k] V) Φ
 
+def is_root_system_equiv {V₂ : Type*} [add_comm_group V₂] [module k V₂]
+  {Φ₂ : set V₂} (h₂ : is_root_system k Φ₂) :=
+{e : V ≃ₗ[k] V₂  | e '' Φ = Φ₂ }
+
+lemma symm_equiv {α β : Type*} [add_comm_monoid α] [add_comm_monoid β] (f : α ≃ₗ[k]  β) (s : set α) (d : set β) (h : f '' s = d) :
+  f.symm '' d = s :=
+begin
+  library_search,
+  sorry,
+end
+
+lemma symm_root_system_equiv {V₂ : Type*} [add_comm_group V₂] [module k V₂]
+  {Φ₂ : set V₂} (h₂ : is_root_system k Φ₂)
+  (e : V ≃ₗ[k] V₂)
+  (he : e ∈ h.is_root_system_equiv h₂) :
+  e.symm ∈ h₂.is_root_system_equiv h :=
+begin
+  -- rw set.mem_iff at he,
+  suffices : e.symm '' Φ₂ = Φ,
+  { refine this, },
+  exact symm_equiv e,
+end
+
+/- prove symm -/
+def is_root_system_equiv_symm {V₂ : Type*} [add_comm_group V₂] [module k V₂]
+  {Φ₂ : set V₂} (h₂ : is_root_system k Φ₂) :
+  is_root_system_equiv  h h₂ → is_root_system_equiv h₂ h :=
+begin
+  rintros ⟨e, he⟩,
+  refine ⟨e.symm, _⟩,
+  exact symm_root_system_equiv h h₂ e he,
+end
+
 @[simp] lemma mem_symmetries_iff (u : V ≃ₗ[k] V) :
   u ∈ h.symmetries ↔ u '' Φ = Φ :=
 iff.rfl
@@ -207,15 +240,18 @@ def weyl_group_to_perm' : h.weyl_group →* equiv.perm Φ :=
 def weyl_group_to_perm'' : h.weyl_group →* equiv.perm Φ :=
 module.unit.to_perm'.comp $ subgroup.inclusion h.weyl_group_le_symmetries
 
+example {α β γ : Type*} (f : α → β) (g : β → γ) (hf: injective f) (hg : injective g) :
+injective (g ∘ f) :=
+begin
+  refine injective.comp hg hf,
+end
+
+#check module.unit.injective_to_perm'
 /-- TODO (optional) If we redefine `weyl_group_to_perm'` above then this should be easy using
 `module.unit.injective_to_perm'` and `weyl_group_le_symmetries`. -/
 lemma injective_weyl_group_to_perm' : injective h.weyl_group_to_perm'' :=
-begin
-  refine @module.unit.injective_to_perm' _ _ _ _ _ _ _,
-  type_check weyl_group_le_symmetries h,
-  type_check module.unit.injective_to_perm' h.span_eq_top,
-  sorry,
-end
+ injective.comp (module.unit.injective_to_perm' h.span_eq_top)
+  (subgroup.inclusion_injective (weyl_group_le_symmetries h))
 
 /-- TODO (optional) If we redefine `weyl_group_to_perm'` above then this should be easy using
 `module.unit.injective_to_perm'` and `weyl_group_le_symmetries`. -/
