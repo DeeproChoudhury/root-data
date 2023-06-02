@@ -140,11 +140,11 @@ def is_root_system_equiv {V₂ : Type*} [add_comm_group V₂] [module k V₂]
   {Φ₂ : set V₂} (h₂ : is_root_system k Φ₂) :=
 {e : V ≃ₗ[k] V₂  | e '' Φ = Φ₂ }
 
-lemma symm_equiv {α β : Type*} [add_comm_monoid α] [add_comm_monoid β] (f : α ≃ₗ[k]  β) (s : set α) (d : set β) (h : f '' s = d) :
+lemma symm_equiv {α β : Type*} (f : α ≃ β) (s : set α) (d : set β) (h : f '' s = d) :
   f.symm '' d = s :=
 begin
-  library_search,
-  sorry,
+  rw ←h,
+  rw equiv.symm_image_image,
 end
 
 lemma symm_root_system_equiv {V₂ : Type*} [add_comm_group V₂] [module k V₂]
@@ -156,7 +156,7 @@ begin
   -- rw set.mem_iff at he,
   suffices : e.symm '' Φ₂ = Φ,
   { refine this, },
-  exact symm_equiv e,
+  exact symm_equiv e.to_equiv _ _ he,
 end
 
 /- prove symm -/
