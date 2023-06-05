@@ -8,6 +8,8 @@
 \title{A coroot calculation}
 % \author{Oliver Nash}
 
+\DeclareMathOperator{\End}{{End}}
+
 \begin{document}
 \maketitle
 
@@ -24,9 +26,9 @@ Recall our definition of the (pre)symmetry associated to a pair:
   Let $k$ be a field of characteristic zero and $V$ a vector space over $k$. Given a vector
   $x \in V$ and a linear form $f \in V^*$ the \textbf{pre-symmetry} associated to the pair $(x, f)$
   is the linear endomorphism of $V$:
-  \begin{align*}
+  \begin{align}\label{symmetry_formula}
     s_{x,f} : y \mapsto y - f(y)x.
-  \end{align*}
+  \end{align}
   If the condition $f(x) = 2$
   holds then $s_{x,f}$ is invertible, satisfies $s_{x,f}^{-1} = s_{x,f}$, and we call it a
   \textbf{symmetry}.
@@ -43,6 +45,31 @@ Recall the uniqueness lemma:
   \end{itemize}
   then $f = g$.
 \end{lemma}
+\begin{proof}
+  We consider the automorphism:
+  \begin{align*}
+    u = s_{x, f} s_{x, g} : V \to V.
+  \end{align*}
+  Using \eqref{symmetry_formula} we note that:
+  \begin{align*}
+    u = \mathbb{I} + (f - g) \otimes x,
+  \end{align*}
+  where $\mathbb{I}$ is the identity map and we are using natural identification
+  $V^* \otimes V \simeq \End(V)$.
+  More generally it follows by induction that if $n \in \mathbb{N}$ then:
+  \begin{align}\label{lem:uniquness_power_formula}
+    u^n = \mathbb{I} + n (f - g) \otimes x.
+  \end{align}
+  Now note that since $s_{x, f}$ and $s_{x, g}$ preserve $\Phi$, so does $u$. However since $\Phi$
+  is a finite spanning set, any automorphism preserving it must have finite order. Thus there
+  exists $n > 0$ such that $u^n = \mathbb{I}$. Using \eqref{lem:uniquness_power_formula} it
+  follows that:
+  \begin{align*}
+    n (f - g) \otimes x = 0.
+  \end{align*}
+  Since $n > 0$, $x \ne 0$, and $V$ has characteristic zero it follows that we must have
+  $f - g = 0$ as required.
+\end{proof}
 
 Recall the definition of a root system:
 \begin{definition}
