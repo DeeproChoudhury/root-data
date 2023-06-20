@@ -18,7 +18,8 @@ class is_root_system (k : Type*) {V : Type*}
 
 namespace is_root_system
 
-variables {k V : Type*} [field k] [char_zero k] [add_comm_group V] [module k V]
+variables {k V : Type*} [comm_ring k] [char_zero k] [add_comm_group V] [module k V]
+[no_zero_smul_divisors k V]
 variables {Φ : set V} (h : is_root_system k Φ)
 include h
 
@@ -37,8 +38,17 @@ local postfix `ᘁ`:100 := h.coroot
   module.to_pre_symmetry (α : V) (αᘁ) '' Φ ⊆ Φ :=
 (classical.some_spec (h.exists_dual _ α.property)).2
 
+-- lemma root_ne_zero (α : Φ) : (α : V) ≠ 0 :=
+-- λ contra, by simpa [contra] using h.coroot_apply_self_eq_two α
+
 lemma root_ne_zero (α : Φ) : (α : V) ≠ 0 :=
-λ contra, by simpa [contra] using h.coroot_apply_self_eq_two α
+begin
+  intro contra,
+  have := h.coroot_apply_self_eq_two α,
+  -- simp only [coroot_apply_self_eq_two, eq_self_iff_true] at this,
+  rw [contra, linear_map.map_zero] at this,
+  norm_num at this,
+end
 
 lemma zero_not_mem : (0 : V) ∉ Φ :=
 λ contra, h.root_ne_zero ⟨0, contra⟩ rfl
@@ -64,8 +74,8 @@ begin
   exact linear_map.congr_fun this v,
 end
 
-protected lemma finite_dimensional : finite_dimensional k V :=
-⟨⟨h.finite.to_finset, by simpa only [finite.coe_to_finset] using h.span_eq_top⟩⟩
+-- protected lemma finite_dimensional : finite_dimensional k V :=
+-- ⟨⟨h.finite.to_finset, by simpa only [finite.coe_to_finset] using h.span_eq_top⟩⟩
 
 lemma symmetry_of_root_image_subset (α : Φ) :
   ട α '' Φ ⊆ Φ :=
@@ -148,8 +158,7 @@ begin
 end
 
 lemma symm_root_system_equiv {V₂ : Type*} [add_comm_group V₂] [module k V₂]
-  {Φ₂ : set V₂} (h₂ : is_root_system k Φ₂)
-  (e : V ≃ₗ[k] V₂)
+  [no_zero_smul_divisors k V₂] {Φ₂ : set V₂} (h₂ : is_root_system k Φ₂)  (e : V ≃ₗ[k] V₂)
   (he : e ∈ h.is_root_system_equiv h₂) :
   e.symm ∈ h₂.is_root_system_equiv h :=
 begin
@@ -161,7 +170,7 @@ end
 
 /- prove symm -/
 def is_root_system_equiv_symm {V₂ : Type*} [add_comm_group V₂] [module k V₂]
-  {Φ₂ : set V₂} (h₂ : is_root_system k Φ₂) :
+[no_zero_smul_divisors k V₂] {Φ₂ : set V₂} (h₂ : is_root_system k Φ₂) :
   is_root_system_equiv  h h₂ → is_root_system_equiv h₂ h :=
 begin
   rintros ⟨e, he⟩,
@@ -303,12 +312,10 @@ must be finite). -/
 lemma finite_weyl_group : finite h.weyl_group :=
 begin
   suffices : finite (h.symmetries),
-  {
-    let f : h.weyl_group → h.symmetries := λ x, ⟨x, h.weyl_group_le_symmetries x.property⟩,
+  { let f : h.weyl_group → h.symmetries := λ x, ⟨x, h.weyl_group_le_symmetries x.property⟩,
     have hf : injective f := by { rintros ⟨x, hx⟩ ⟨y, hy⟩ hxy, simpa using hxy, },
     haveI := this,
-    exact finite.of_injective f hf,
-  },
+    exact finite.of_injective f hf, },
   apply finite_symmetries,
   -- suffices : finite (equiv.perm Φ),
   -- { haveI := this,

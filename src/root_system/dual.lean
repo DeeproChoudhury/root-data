@@ -12,6 +12,9 @@ include h
 local postfix `ᘁ`:100 := h.coroot
 local notation `ട` := h.symmetry_of_root
 
+protected lemma finite_dimensional : finite_dimensional k V :=
+⟨⟨h.finite.to_finset, by simpa only [finite.coe_to_finset] using h.span_eq_top⟩⟩
+
 @[simp] lemma coroot_symmetry_apply_eq (α β : Φ) (h') :
   ⟨ട α β, h'⟩ᘁ = βᘁ - (βᘁ α) • αᘁ :=
 begin
@@ -136,7 +139,7 @@ lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
 { finite := h.finite_coroots,
   span_eq_top := h.coroot_span_eq_top,
   exists_dual :=
-    begin
+  begin
     rintros x ⟨α, rfl⟩,
     refine ⟨module.dual.eval k V α, by simp, _⟩,
     simp only [module.to_pre_symmetry_apply, module.dual.eval_apply, image_subset_iff],
@@ -153,9 +156,11 @@ lemma is_root_system_coroots : is_root_system k $ range h.coroot :=
         norm_num at h₁,
     },
     haveI := h.finite_dimensional,
-    rw module.eq_dual_of_to_pre_symmetry_image_subseteq (hα) h.finite_coroots h.coroot_span_eq_top h₁ h₂ (_ : module.eval_equiv k V α (h.coroot α) = 2) _,
+    rw module.eq_dual_of_to_pre_symmetry_image_subseteq (hα) h.finite_coroots h.coroot_span_eq_top
+      h₁ h₂ (_ : module.eval_equiv k V α (h.coroot α) = 2) _,
     {
-      refine h.subset_zmultiples β β.property (h.coroot β) ⟨h.coroot_apply_self_eq_two β, _⟩ ⟨α, α.property, rfl⟩,
+      refine h.subset_zmultiples
+        β β.property (h.coroot β) ⟨h.coroot_apply_self_eq_two β, _⟩ ⟨α, α.property, rfl⟩,
       exact h.symmetry_of_root_image_subset β,
     },
     {

@@ -242,6 +242,7 @@ begin
   exact (monotone_image hf₂).trans hg₂,
 end
 
+-- V dual is zero if and only if V is zero --
 @[simp] lemma subsingleton_dual_iff {k V : Type*} [field k] [add_comm_group V] [module k V] :
   subsingleton (dual k V) ↔ subsingleton V :=
 begin
@@ -364,8 +365,10 @@ end
 @[simp] lemma _root_.basis.to_dual_total_left'
   {R M ι : Type*} [comm_semiring R] [add_comm_monoid M] [module R M] [decidable_eq ι]
   (b : basis ι R M) (f : ι →₀ R) :
-  (b.to_dual ((finsupp.total ι M R b) f)) ∘ b = f :=
-by { ext, simp, }
+  (b.to_dual (finsupp.total ι M R b f)) ∘ b = f :=
+by { ext i, simp only [function.comp_apply], simp, }
+
+#check basis.to_dual_total_left
 
 lemma _root_.basis.to_dual_pos_def {k V ι : Type*}
   [linear_ordered_field k] [add_comm_group V] [module k V] (b : basis ι k V) :
@@ -391,7 +394,6 @@ lemma _root_.quadratic_form.pos_def.sum {k V ι : Type*} [finite ι] [nonempty �
 begin
   haveI : fintype ι := fintype.of_finite ι,
   simp only [finsum_eq_sum_of_fintype],
-  -- use `finset.sum_induction_nonempty`
   refine finset.sum_induction_nonempty _ _ (λ a b ha hb, quadratic_form.pos_def.add _ _ ha hb)
   finset.univ_nonempty (λ i hi, hq _),
 end
